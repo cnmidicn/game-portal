@@ -1,4 +1,6 @@
 import * as T from './vendor/three.module.js';
+// Bound radiance before blur so hot pixels cannot contaminate neighboring pixels.
+const radiance='vec3 sane(vec3 c){return vec3(c.r>=0.?min(c.r,16.):0.,c.g>=0.?min(c.g,16.):0.,c.b>=0.?min(c.b,16.):0.);}';
 const vertex='varying vec2 p;void main(){p=uv;gl_Position=vec4(position.xy,0.,1.);}';
 /** Linear HDR scene → bright extraction → separable blur → one display transform. */
 export class CinematicPass {
@@ -8,11 +10,12 @@ export class CinematicPass {
     this.sceneTarget=target();this.sceneTarget.depthBuffer=true;this.sceneTarget.samples=Math.min(2,renderer.capabilities.maxSamples);this.bright=target();this.a=target();this.b=target();
     this.scene=new T.Scene();this.camera=new T.OrthographicCamera(-1,1,1,-1,0,1);this.quad=new T.Mesh(new T.PlaneGeometry(2,2));this.quad.frustumCulled=false;this.scene.add(this.quad);
     const material=(uniforms,fragmentShader)=>new T.ShaderMaterial({uniforms,vertexShader:vertex,fragmentShader,depthTest:false,depthWrite:false,toneMapped:false});
-    this.extract=material({image:{value:this.sceneTarget.texture}},`varying vec2 p;uniform sampler2D image;void main(){vec3 c=texture2D(image,p).rgb;float l=max(c.r,max(c.g,c.b));float knee=clamp((l-.65)/.7,0.,1.);gl_FragColor=vec4(c*knee*knee,1.);}`);
+    this.extract=material({image:{value:this.sceneTarget.texture}},`varying vec2 p;uniform sampler2D image;${radiance}void main(){vec3 c=sane(texture2D(image,p).rgb);float l=max(c.r,max(c.g,c.b));float knee=clamp((l-.65)/.7,0.,1.);gl_FragColor=vec4(c*knee*knee,1.);}`);
     this.blur=material({image:{value:null},stepSize:{value:new T.Vector2()}},`varying vec2 p;uniform sampler2D image;uniform vec2 stepSize;void main(){vec3 c=texture2D(image,p).rgb*.227027;c+=(texture2D(image,p+stepSize*1.384615).rgb+texture2D(image,p-stepSize*1.384615).rgb)*.316216;c+=(texture2D(image,p+stepSize*3.230769).rgb+texture2D(image,p-stepSize*3.230769).rgb)*.070270;gl_FragColor=vec4(c,1.);}`);
     this.compose=material({image:{value:this.sceneTarget.texture},bloom:{value:this.b.texture},resolution:{value:new T.Vector2()},boost:{value:0},bass:{value:0}},`varying vec2 p;uniform sampler2D image;uniform sampler2D bloom;uniform vec2 resolution;uniform float boost;uniform float bass;
+      ${radiance}
       vec3 aces(vec3 x){x=clamp(x,vec3(0.),vec3(32.));return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
-      void main(){vec2 offset=(p-.5)*boost*1.4/resolution;vec3 c=texture2D(image,p).rgb;c.r=texture2D(image,p+offset).r;c.b=texture2D(image,p-offset).b;vec3 glow=texture2D(bloom,p).rgb;c+=glow*(.27+boost*.12+bass*.055);c*=1.-smoothstep(.3,.88,length((p-.5)*vec2(1.,.85)))*.22;c=aces(c*1.08);gl_FragColor=vec4(c,1.);
+      void main(){vec2 offset=(p-.5)*boost*1.4/resolution;vec3 c=sane(texture2D(image,p).rgb);c.r=sane(texture2D(image,p+offset).rgb).r;c.b=sane(texture2D(image,p-offset).rgb).b;vec3 glow=texture2D(bloom,p).rgb;c+=glow*(.27+boost*.12+bass*.055);c*=1.-smoothstep(.3,.88,length((p-.5)*vec2(1.,.85)))*.22;c=aces(c*1.08);gl_FragColor=vec4(c,1.);
       #include <colorspace_fragment>
       }`);
   }
