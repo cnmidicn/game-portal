@@ -25,6 +25,6 @@
 - dist/play/devour、echo、wave：从三个独立项目同步的当前可玩快照。
 - scripts/sync-games.mjs：快照与截图同步工具。
 
-三个游戏各自在同级独立项目维护，首页快照用于当前预览直接游玩，避免尚未绑定的正式域名返回 404。worlds.js 保留 devour.midi.cn、echo.midi.cn、wave.midi.cn 的目标域名，正式域名接通后可切换入口。首页不会修改 DNS 或三个源项目。
+三个游戏各自在同级独立项目维护，正式首页入口使用 devour.midi.cn、echo.midi.cn、wave.midi.cn 三个独立分站；localhost 与 127.0.0.1 预览使用 play/ 下的同步快照。三个源项目独立维护，部署使用各仓库的 gh-pages 分支，Cloudflare 与 DNS 设置不由首页脚本修改。
 
 仅点击后开启声音；可选 Google Fonts 加载失败时回退系统字体。所有模型、星云和声音实时生成，无新图片生成依赖。已有 symphony/、pulse/ 历史文件暂留，但新展厅不依赖它们。
