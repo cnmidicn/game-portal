@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#06191e"><meta name="description" content="从一颗微小细胞开始，吞噬、进化，奏响属于你的深海交响曲。3D音乐生存游戏。">
+  <title>吞噬交响曲 · Symphony of Life</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='%2358e4bf'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%230b4449'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="world" aria-label="三维海洋游戏场景"></div>
+  <div class="vignette"></div><div class="grain"></div>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="吞噬交响曲首页"><span class="brand-mark">◉</span><span>吞噬交响曲<small>SYMPHONY OF LIFE</small></span></a>
+    <div class="top-center"><span class="live-dot"></span><span id="location">THE PRIMORDIAL SEA</span><i></i><span id="seed-label">生命，从一个音符开始</span></div>
+    <nav><button id="settings-btn" class="icon-btn" aria-label="音量与画质" title="音量与画质">⚙</button><button id="guide-btn" class="icon-btn" aria-label="玩法说明" title="玩法说明">?</button><button id="sound-btn" class="icon-btn" aria-label="切换声音" title="切换声音">♫</button><button id="pause-btn" class="icon-btn" aria-label="暂停游戏" title="暂停 · Esc">Ⅱ</button></nav>
+  </header>
+
+  <main id="home" class="home">
+    <div class="eyebrow"><span></span>一场关于生命与声音的冒险</div>
+    <h1>从微小，<br>到<span>无限。</span></h1>
+    <p class="intro">吞噬。进化。奏响生命。<br>让每一次成长，都成为交响曲的新乐章。</p>
+    <div class="biome-picker" id="biome-picker" aria-label="选择海域"><button data-biome="lagoon" class="selected" aria-pressed="true">微光浅海<small>舒缓探索</small></button><button data-biome="tide" aria-pressed="false">潮汐回廊<small>顺流捕食</small></button><button data-biome="crystal" aria-pressed="false">晶簇深渊<small>危险与馈赠</small></button></div>
+    <div class="home-actions"><button id="start-btn" class="primary">潜入生命之海 <span>↗</span></button><button id="home-guide" class="text-btn">怎么玩 <span>↗</span></button></div>
+    <div class="home-meta"><span>◉ 自由吞噬</span><span>⌁ 随机进化</span><span>♫ 自适应音乐</span></div>
+    <div id="record" class="record"></div>
+    <button id="archive-btn" class="archive-btn">◌ 生命档案 <span>探索图鉴与新起始形态 ↗</span></button>
+  </main>
+
+  <div id="specimen" class="specimen"><span class="tiny-label">SPECIMEN 001 / 原初生命</span><div class="specimen-line"></div><span class="specimen-copy">一切伟大，都始于微小。<br><small>8 μ · 等待被唤醒</small></span></div>
+
+  <aside class="chapters" id="chapters"><div class="tiny-label">EVOLUTION / 进化旅程</div><div class="chapter active"><b>01</b><span>原初细胞<small>THE BEGINNING</small></span><i></i></div><div class="chapter"><b>02</b><span>微光生命<small>FIRST LIGHT</small></span><i></i></div><div class="chapter"><b>03</b><span>深蓝猎手<small>THE HUNTER</small></span><i></i></div><div class="chapter"><b>04</b><span>深海巨兽<small>THE LEVIATHAN</small></span><i></i></div><div class="chapter"><b>05</b><span>海域霸主<small>THE SYMPHONY</small></span><i></i></div></aside>
+
+  <section id="hud" class="hud hidden" aria-label="游戏状态">
+    <div class="growth-panel"><div class="growth-head"><span id="stage-title">原初细胞</span><span id="mass">8 μ</span></div><div class="progress"><div id="growth-fill"></div></div><div class="growth-foot"><span id="next-stage">下一次进化 · 32 μ</span><span id="health">● ● ●</span></div><div id="traits" class="traits"></div></div>
+    <div class="run-stats"><span id="time">00:00</span><small>存活时间</small><strong id="combo">×1</strong><small id="combo-label">吞噬连击</small></div>
+    <div class="mission"><span class="tiny-label">本局目标</span><div id="mission-text">吞噬微光，成长至 32 μ</div><small id="mission-sub">青绿可吞噬 · 珊瑚红需躲避</small></div>
+    <div id="challenge" class="challenge-panel"><span class="tiny-label">生命的愿望</span><div><b id="challenge-name">连锁共鸣</b><span id="challenge-count">0 / 15</span></div><p id="challenge-desc">连续吞噬，达成 15 连击</p><div class="progress"><div id="challenge-fill"></div></div><small id="challenge-reward">完成奖励 · 修复护膜 + 营养雨</small></div>
+    <div id="boss-status" class="boss-status hidden"><span>♛ 海域霸主</span><b id="boss-state">护壳闭合</b><small id="boss-tip">等它冲撞后，寻找破绽</small></div>
+    <div id="danger" class="danger hidden">有天敌接近 · 冲刺脱离</div>
+    <div class="skill-panel"><button id="dash-btn" class="skill" aria-label="冲刺"><span>↗</span><b>冲刺</b><small id="dash-label">SPACE</small><div id="dash-fill"></div></button><button id="ability-btn" class="skill hidden" aria-label="进化技能"><span>⌁</span><b id="ability-name">共鸣</b><small id="ability-label">E</small><div id="ability-fill"></div></button></div>
+    <canvas id="minimap" width="160" height="160" aria-label="附近生物雷达"></canvas>
+  </section>
+
+  <footer class="bottom-bar"><div class="music-info"><div class="equalizer"><i></i><i></i><i></i><i></i><i></i></div><span id="track-name">原初 · Primordial<small id="music-status">点击开始，唤醒声音</small></span></div><div class="beat-strip" id="beat-strip"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="control-hint" id="control-hint"><kbd>W A S D</kbd> 移动 <span>·</span> <kbd>SPACE</kbd> 冲刺</div></footer>
+
+  <div id="toast" class="toast" role="status"></div>
+  <div id="unlock-notice" class="unlock-notice" role="status"></div>
+  <div id="overlay" class="overlay hidden"><section id="dialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"></section></div>
+  <div id="joystick" class="joystick"><div id="joystick-knob"></div></div>
+  <div id="loading" class="loading"><div class="loading-cell"></div><span>正在唤醒生命之海…</span></div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
