@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#060912"><meta name="description" content="节拍弹球：在三维星云中击碎水晶，让每一次碰撞成为旋律。"><title>节拍弹球 · 星云回响 | 靡靡之音 MIDI.CN</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<canvas id="world" aria-label="三维星云弹球舞台"></canvas><div class="shade"></div>
+<header><a class="brand" href="../" aria-label="返回靡靡之音首页"><span class="brand-icon">ııⅠıı</span><span>靡靡之音<small>MIDI.CN / PLAY</small></span></a><div class="world-title"><span class="live-dot"></span> WORLD 002 <i>/</i> 星云回响</div><div class="tools"><button id="sound" aria-label="关闭声音" aria-pressed="true">声音 ON</button><button id="pause" aria-label="暂停游戏" disabled>Ⅱ</button><button id="full" aria-label="切换全屏">⛶</button></div></header>
+<section class="hud" aria-label="游戏状态"><div class="score"><span>SCORE / 得分</span><strong id="score">000000</strong></div><div class="round"><span id="round">乐章 01</span><i></i><span id="lives" aria-label="剩余生命">◇ ◇ ◇</span></div><div class="record"><span>PERSONAL BEST</span><strong id="best">000000</strong></div></section>
+<aside class="intro" id="intro"><div class="eyebrow"><span></span> A COSMIC PINBALL EXPERIENCE</div><h1>节拍弹球<span>。</span></h1><h2>让宇宙，随你共鸣。</h2><p>穿过星云，击碎沉默。<br>每一次碰撞，都是你写下的旋律。</p><button class="primary" id="start">开始演奏 <span>↗</span></button><div class="headphones">◉ 建议佩戴耳机 · 沉入立体声场</div><div class="intro-meta"><span>实时 3D</span><span>生成式音乐</span><span>随机成长</span></div></aside>
+<div class="orbit-label" id="orbit-label"><span>NEBULA RESONANCE</span><small>96 BPM / D MINOR / ∞ POSSIBILITIES</small></div>
+<div class="combo" id="combo"><strong>0</strong><span>RESONANCE / 连击</span><i></i></div><div class="feedback" id="feedback" aria-live="polite"></div>
+<div class="launch-hint" id="launch-hint" hidden><button id="launch">发射星核 ↗</button><span>移动光翼准备接球 · 点击场地或按空格发球</span></div>
+<footer><div class="track"><span class="disc">◉</span><div>星云回响<small>NEBULA / LIVE GENERATIVE SESSION</small></div><div class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="controls-hint">鼠标 / 触控移动 <b>·</b> ← → 移动 <b>·</b> 空格 发球 <b>·</b> P 暂停</div><label class="volume">音量 <input id="volume" aria-label="音乐音量" type="range" min="0" max="100" value="65"></label></footer>
+<dialog id="upgrade" aria-labelledby="upgrade-title"><div class="eyebrow">CHAPTER COMPLETE / 乐章完成</div><h2 id="upgrade-title">选择下一段回响</h2><p>让你的光翼，拥有新的可能。</p><div id="choices"></div></dialog>
+<dialog id="pause-dialog" aria-labelledby="pause-title"><div class="eyebrow">TAKE A BREATH</div><h2 id="pause-title">让回响，等一会。</h2><p>你的星云留在这里。</p><button class="primary" id="resume">继续演奏 <span>↗</span></button><button class="secondary" id="restart-pause">重新开始</button><a class="back" href="../">返回音乐宇宙 ↗</a></dialog>
+<dialog id="over" aria-labelledby="over-title"><div class="eyebrow">UNTIL THE NEXT RESONANCE</div><h2 id="over-title">余音，仍在星间。</h2><div class="result"><div><span>本次得分</span><strong id="final-score">0</strong></div><div><span>最高连击</span><strong id="final-combo">0</strong></div><div><span>抵达乐章</span><strong id="final-level">1</strong></div></div><p id="record-message">再一次出发，奏出不同的宇宙。</p><button class="primary" id="restart">再演奏一次 <span>↗</span></button><a class="back" href="../">返回音乐宇宙 ↗</a></dialog>
+<div id="error" hidden role="alert"></div><script type="module" src="main.js"></script>
+</body></html>
