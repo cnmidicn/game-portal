@@ -1,3 +1,9 @@
 preview.jpg
 node_modules/
 .env*
+
+.openai/publish-workspace/
+
+.openai/workflow-diagnostics.mjs
+
+.openai/three-worlds-deploy.tar.gz

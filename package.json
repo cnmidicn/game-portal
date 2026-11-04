@@ -1,1 +1,12 @@
-{"name":"miyin-home","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node server.mjs","check":"node --check dist/main.js && node --check dist/scene.js"}}
+{
+  "name": "game-portal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check dist/main.js && node --check dist/scene.js && node --check dist/worlds.js && node --check dist/world-models.js && node --check scripts/sync-games.mjs",
+    "test": "node --test test/portal.test.mjs",
+    "sync:games": "node scripts/sync-games.mjs"
+  }
+}

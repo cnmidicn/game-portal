@@ -1,0 +1,27 @@
+{
+  "bpm": 128,
+  "duration": 60.0,
+  "sampleRate": 44100,
+  "channels": 2,
+  "peak": 0.88,
+  "rms": 0.2174,
+  "sections": [
+    {
+      "at": 0,
+      "rms": 0.2045
+    },
+    {
+      "at": 15,
+      "rms": 0.2414
+    },
+    {
+      "at": 30,
+      "rms": 0.173
+    },
+    {
+      "at": 45,
+      "rms": 0.2429
+    }
+  ],
+  "combatStemPeak": 0.1199
+}
