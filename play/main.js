@@ -70,7 +70,7 @@ function toast(text,kind=''){
   setTimeout(()=>{chip.classList.add('out');setTimeout(()=>chip.remove(),340);},life);
 }
 function announce(items){if(!items.length)return;runUnlocks.push(...items);$('unlock-notice').innerHTML='<small>NEW DISCOVERY / 新的生命回响</small>'+items.map(i=>esc(i.name)).join(' · ');$('unlock-notice').classList.add('visible');clearTimeout(unlockTimer);unlockTimer=setTimeout(()=>$('unlock-notice').classList.remove('visible'),5000);}
-function record(){announce(recordRun(archive,game));saveArchive();}
+function record(){const items=recordRun(archive,game)||[];announce(items);saveArchive();return items;}
 function checkpoint(){if(game.status==='home')return;record();if(!checkpoints.save(game)&&!checkpoints.available)toast('自动保存不可用，请保留当前页面');}
 function releaseInput(){keys.clear();dragging=false;mouseTarget=null;viewDrag=null;touchRotate=null;stickId=null;stick.x=stick.z=0;$('joystick-knob').style.transform='';}
 function showDialog(html,onEscape=null,ending=false){

@@ -33,8 +33,8 @@ export class Ocean {
     this.time={value:0};this.beat={value:0};this.entities=new Map();this.particles=[];this.ripples=[];this.hazardMeshes=new Map();this.shake=0;
     this.sphere=new THREE.SphereGeometry(1,64,48);this.ico=new THREE.IcosahedronGeometry(1,3);this.torus=new THREE.TorusGeometry(1,.016,6,80);this.spikeGeo=new THREE.ConeGeometry(.3,1,6);this.hazardRingGeo=new THREE.RingGeometry(.85,1,80);
     // Layered cinematic lighting: sky bounce, key sunlight, cool fill and warm rim.
-    this.scene.add(new THREE.HemisphereLight(0xb6ecd9,0x031a22,1.25));
-    const sun=new THREE.DirectionalLight(0xe6fff0,2.25);sun.position.set(-20,52,20);sun.castShadow=true;
+    this.scene.add(new THREE.HemisphereLight(0xb6ecd9,0x0d3a42,1.55));
+    const sun=new THREE.DirectionalLight(0xe6fff0,2.6);sun.position.set(-20,52,20);sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-70;sun.shadow.camera.right=70;sun.shadow.camera.top=70;sun.shadow.camera.bottom=-70;sun.shadow.camera.near=1;sun.shadow.camera.far=190;sun.shadow.bias=-.00045;sun.shadow.normalBias=.035;sun.shadow.radius=2.5;
     this.scene.add(sun);this.scene.add(sun.target);this.sun=sun;
     // A second, wider shadow frustum acts as a cheap far cascade so distant
@@ -42,10 +42,13 @@ export class Ocean {
     const sunFar=new THREE.DirectionalLight(0xbfe9df,.42);sunFar.position.set(-52,86,44);sunFar.castShadow=false;
     sunFar.shadow.mapSize.set(1024,1024);sunFar.shadow.camera.left=-240;sunFar.shadow.camera.right=240;sunFar.shadow.camera.top=240;sunFar.shadow.camera.bottom=-240;sunFar.shadow.camera.near=1;sunFar.shadow.camera.far=420;sunFar.shadow.bias=-.0008;sunFar.shadow.normalBias=.06;sunFar.shadow.radius=3.5;
     this.scene.add(sunFar);this.scene.add(sunFar.target);this.sunFar=sunFar;
-    const fill=new THREE.DirectionalLight(0x64b8dc,1.05);fill.position.set(25,12,-30);this.scene.add(fill);
-    const rim=new THREE.DirectionalLight(0x9affd8,.85);rim.position.set(0,-6,18);this.scene.add(rim);
+    const fill=new THREE.DirectionalLight(0x64b8dc,1.25);fill.position.set(25,12,-30);this.scene.add(fill);
+    const rim=new THREE.DirectionalLight(0x9affd8,1.0);rim.position.set(0,-6,18);this.scene.add(rim);
+    // Soft camera-side water light: lifts near scanned models out of the deep
+    // without washing out the open water or adding another shadow pass.
+    this.localLight=new THREE.PointLight(0x9fd8ef,160,90,2);this.localLight.position.set(0,14,6);this.scene.add(this.localLight);
     // Procedural environment map gives every material real reflections without external assets.
-    this.scene.environment=this.makeEnvironment();
+    this.scene.environment=this.makeEnvironment();if('environmentIntensity' in this.scene)this.scene.environmentIntensity=1.35;
     this.materials={player:this.cellMaterial('#a3f6cc'),edible:this.cellMaterial('#6ce6b6'),danger:this.cellMaterial('#ec977d'),equal:this.cellMaterial('#8dbed3'),boss:this.cellMaterial('#f2bc8b')};
     this.glowTexture=this.makeGlow();this.glowMaterials={};this.faunaTintColors=FAUNA_TINTS.map(t=>new THREE.Color(t.color));this.foodTintColors=FOOD_TINTS.map(c=>new THREE.Color(...c));
     this.makeFloor();this.makeDust();this.makeFood();this.makeLandmarks();this.worldScene=new WorldScene(this.scene,this.glowTexture);
@@ -232,9 +235,9 @@ export class Ocean {
           float back=max(dot(-n,lightDir),0.);
           // Faint cytoplasm flow + organelle specks, richer on the hero cell.
           float flow=sin(vPos.x*13.+sin(vPos.z*9.+uTime*.6)*2.+uTime*.4)*.5+.5;
-          float veins=pow(flow,7.)*.10*(.4+uHero);
+          float veins=pow(flow,7.)*.05*(.4+uHero);
           vec3 cell=vec3(vPos.x*11.,vPos.y*13.,vPos.z*10.);
-          float speck=pow(max(0.,sin(cell.x+uTime)*sin(cell.y-uTime*.7)*sin(cell.z+uTime*.4)),12.)*.16*(.3+uHero);
+          float speck=pow(max(0.,sin(cell.x+uTime)*sin(cell.y-uTime*.7)*sin(cell.z+uTime*.4)),12.)*.08*(.3+uHero);
           // Fbm-like cytoplasm: layered noise gives the membrane organic depth.
           float noise=sin(vPos.x*7.+uTime*.3)*sin(vPos.y*9.-uTime*.2)*sin(vPos.z*8.+uTime*.25);
           noise+=.5*sin(vPos.x*15.-uTime*.4)*sin(vPos.z*13.+uTime*.3);
@@ -242,7 +245,7 @@ export class Ocean {
           // Fake subsurface: light bleeding through the thin membrane on the dark side.
           vec3 sss=uColor*back*.32+uColor*pow(1.-facing,1.6)*.22;
           vec3 col=uColor*(.11+light*.26)+sss+uColor*fresnel*1.15;
-          col*=mix(vec3(.68),vec3(1.24),grain);
+          col*=mix(vec3(.84),vec3(1.12),grain);
           col+=vec3(.72,.92,.82)*pow(light,34.)*1.1;
           col+=uColor*(veins+speck);
           col+=uColor*uBeat*.06*uHero;
@@ -359,13 +362,13 @@ export class Ocean {
           vec3 col=substrate*water*(.48+ndl*.95)*uTint*vColor;
           col+=vec3(.66,.88,.82)*spec*.32;
           float ripple=sin(vWorld.x*.42+sin(vWorld.z*.12)*1.7+uTime*.035)*sin(vWorld.z*.21-uTime*.02);
-          col*=1.+ripple*.035;
+          col*=1.+ripple*.012;
           // Refracted caustic web, projected in world space so dunes stay legible.
           vec2 cuv=vWorld.xz*.018+vec2(uTime*.009,uTime*.006);
-          float caust=texture2D(uCaustics,cuv).g*.48+texture2D(uCaustics,cuv*1.37-vec2(uTime*.006,0.)).g*.34+texture2D(uCaustics,cuv*1.91+vec2(0.,uTime*.008)).g*.18;
-          float mask=smoothstep(.30,.92,caust)*(.25+.75*ndl);
-          col+=mix(uDeep,uShallow,.82)*mask*.42*(.8+uBeat*.2);
-          float stream=pow(max(0.,sin(vWorld.x*.006+uTime*.11+sin(vWorld.z*.004)*2.)),24.)*.05*uFlow;
+          float caust=texture2D(uCaustics,cuv).g*.64+texture2D(uCaustics,cuv*1.47-vec2(uTime*.006,0.)).g*.36;
+          float mask=smoothstep(.32,.94,caust)*(.25+.75*ndl);
+          col+=mix(uDeep,uShallow,.82)*mask*.26*(.8+uBeat*.2);
+          float stream=pow(max(0.,sin(vWorld.x*.006+uTime*.11+sin(vWorld.z*.004)*2.)),24.)*.02*uFlow;
           col+=vec3(.12,.28,.26)*stream;
           if(uBackdropMix>.001){
             vec3 photo=texture2D(uBackdrop,vec2(vUv.x*1.08-.04,1.-vUv.y*1.08+.04)).rgb;
@@ -389,20 +392,20 @@ export class Ocean {
     // ending at a fixed rectangle.
   }
   makeDust(){
-    const count=1500,a=new Float32Array(count*3),c=new Float32Array(count*3);
+    const count=700,a=new Float32Array(count*3),c=new Float32Array(count*3);
     for(let i=0;i<count;i++){const r=Math.sqrt(Math.random())*900,ang=Math.random()*Math.PI*2;a[i*3]=Math.cos(ang)*r;a[i*3+1]=Math.random()*44-4;a[i*3+2]=Math.sin(ang)*r;const tone=.45+Math.random()*.45;c[i*3]=.18*tone;c[i*3+1]=.44*tone;c[i*3+2]=.44*tone;}
     const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(a,3));geo.setAttribute('color',new THREE.BufferAttribute(c,3));
-    this.dust=new THREE.Points(geo,new THREE.PointsMaterial({vertexColors:true,size:.085,transparent:true,opacity:.15,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}));this.scene.add(this.dust);
+    this.dust=new THREE.Points(geo,new THREE.PointsMaterial({vertexColors:true,size:.085,transparent:true,opacity:.07,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}));this.scene.add(this.dust);
   }
-  pointMaterial(){return new THREE.ShaderMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{uPixel:{value:Math.min(devicePixelRatio,1.7)}},vertexShader:`attribute float aSize;varying vec3 vColor;uniform float uPixel;void main(){vColor=color;vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=clamp(aSize*480.*uPixel/-p.z,1.,70.);}`,fragmentShader:`varying vec3 vColor;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;float a=pow(1.-d,2.5);gl_FragColor=vec4(vColor*(.65+pow(1.-d,8.)*1.8),a);}`});}
+  pointMaterial(){return new THREE.ShaderMaterial({vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,uniforms:{uPixel:{value:Math.min(devicePixelRatio,1.7)}},vertexShader:`attribute float aSize;varying vec3 vColor;uniform float uPixel;void main(){vColor=color;vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;gl_PointSize=clamp(aSize*480.*uPixel/-p.z,1.,70.);}`,fragmentShader:`varying vec3 vColor;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;float a=pow(1.-d,2.5);gl_FragColor=vec4(vColor*(.42+pow(1.-d,8.)*1.15),a*.72);}`});}
   makeFood(){this.foodGeometry=new THREE.BufferGeometry();this.foodGeometry.setAttribute('position',new THREE.Float32BufferAttribute(new Float32Array(1500),3));this.foodGeometry.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array(1500),3));this.foodGeometry.setAttribute('aSize',new THREE.Float32BufferAttribute(new Float32Array(500),1));this.foodPoints=new THREE.Points(this.foodGeometry,this.pointMaterial());this.foodPoints.frustumCulled=false;this.scene.add(this.foodPoints);}
   makeLandmarks(){
     this.landmarks=new THREE.Group();this.seaweed=[];this.fishSchools=[];this.bubbles=[];this.fishModels=[];this.wrapItems=[];
     // Real CC0 photogrammetry rocks: fewer, farther apart, more open water.
     loadCreature('coast_rocks').then(model=>{
       if(!model)return;
-      for(let i=0;i<38;i++){
-        const a=i*2.399,r=30+Math.sqrt(i/38)*190,x=Math.cos(a)*r,z=Math.sin(a)*r;
+      for(let i=0;i<14;i++){
+        const a=i*2.399,r=52+Math.sqrt(i/14)*205,x=Math.cos(a)*r,z=Math.sin(a)*r;
         const rock=model.clone(true);rock.rotation.set(0,a*.7,0);
         const scale=1.25+Math.random()*1.9;rock.scale.setScalar(scale);
         rock.position.set(x,groundY(x,z,scale*.62),z);this.landmarks.add(rock);this.wrapItems.push({mesh:rock,lift:scale*.62,seed:i});
@@ -412,10 +415,10 @@ export class Ocean {
     // Instanced so hundreds of fragments cost one draw call even at max quality.
     const rubbleGeo=new THREE.IcosahedronGeometry(1,1);
     const rubbleMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94,metalness:0,flatShading:true});
-    const rubble=new THREE.InstancedMesh(rubbleGeo,rubbleMat,260);
+    const rubble=new THREE.InstancedMesh(rubbleGeo,rubbleMat,90);
     const dummy=new THREE.Object3D(),rubbleTone=[new THREE.Color(0x4f5f5c),new THREE.Color(0x6d746a),new THREE.Color(0x3f5a5c),new THREE.Color(0x8a8574)];
-    for(let i=0;i<260;i++){
-      const a=i*2.39996,r=10+Math.sqrt(Math.random())*180,x=Math.cos(a)*r,z=Math.sin(a)*r;
+    for(let i=0;i<90;i++){
+      const a=i*2.39996,r=38+Math.sqrt(Math.random())*190,x=Math.cos(a)*r,z=Math.sin(a)*r;
       const s=.05+Math.random()*.19;
       dummy.position.set(x,groundY(x,z,s*.42),z);
       dummy.rotation.set(Math.random()*3,Math.random()*6.28,Math.random()*3);
@@ -428,8 +431,8 @@ export class Ocean {
     const flora=['cc0/hydrozoan-distichopora-borealis','cc0/hydrozoan-distichopora-violacea','cc0/hydrozoan-crypthelia-viridis'];
     flora.forEach((name,idx)=>loadCreature(name).then(model=>{
       if(!model)return;
-      for(let g=0;g<7;g++){
-        const a=(g+idx*.31)*2.399,r=36+Math.sqrt(g/7)*170;
+      for(let g=0;g<2;g++){
+        const a=(g+idx*.31)*2.399,r=52+Math.sqrt(g/2)*185;
         const x=Math.cos(a)*r+(Math.random()-.5)*6,z=Math.sin(a)*r+(Math.random()-.5)*6;
         const plant=model.clone(true);plant.rotation.y=Math.random()*6.28;
         const scale=1.2+Math.random()*1.5;plant.scale.setScalar(scale);
@@ -438,28 +441,28 @@ export class Ocean {
       }
     }));
     // Real Smithsonian coral scans; sparse colonies read better in deep water.
-    const coralSpecies=['cc0/coral-acropora','cc0/coral-madrepora','cc0/coral-pocillopora','cc0/coral-goniastrea','cc0/coral-pavonia','cc0/coral-porites-lobata','cc0/coral-leptoseris','cc0/coral-manopora'];
+    const coralSpecies=['cc0/coral-acropora','cc0/coral-madrepora','cc0/coral-goniastrea','cc0/coral-pavonia','cc0/coral-porites-lobata','cc0/coral-manopora'];
     coralSpecies.forEach((name,idx)=>loadCreature(name).then(model=>{
       if(!model)return;
-      for(let k=0;k<2;k++){
-        const a=(k+idx*.17)*2.399+1.1,r=40+Math.sqrt(k/2)*165,x=Math.cos(a)*r,z=Math.sin(a)*r;
+      for(let k=0;k<1;k++){
+        const a=(k+idx*.17)*2.399+1.1,r=58+idx*31,x=Math.cos(a)*r,z=Math.sin(a)*r;
         const colony=model.clone(true);colony.rotation.y=Math.random()*6.28;
         const scale=1.5+Math.random()*1.2;colony.scale.setScalar(scale);
         colony.position.set(x,groundY(x,z,scale*.58),z);this.landmarks.add(colony);this.wrapItems.push({mesh:colony,lift:scale*.58,seed:idx*2+k+80});
       }
     }));
     // Distant fish schools: fewer, farther out and dimmer to keep the sea open.
-    for(let s=0;s<4;s++){
-      const count=28+Math.floor(Math.random()*26),pos=new Float32Array(count*3);
+    for(let s=0;s<2;s++){
+      const count=18+Math.floor(Math.random()*12),pos=new Float32Array(count*3);
       for(let i=0;i<count;i++){pos[i*3]=(Math.random()-.5)*14;pos[i*3+1]=(Math.random()-.5)*5;pos[i*3+2]=(Math.random()-.5)*14;}
       const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
       const pts=new THREE.Points(geo,new THREE.PointsMaterial({color:s%2?0x9fe8d6:0x9fd8f0,size:.38,transparent:true,opacity:.45,depthWrite:false,blending:THREE.AdditiveBlending}));
-      const angle=Math.random()*6.28,radius=74+s*30;pts.position.set(Math.cos(angle)*radius,5+Math.random()*10,Math.sin(angle)*radius);
+      const angle=Math.random()*6.28,radius=96+s*38;pts.position.set(Math.cos(angle)*radius,5+Math.random()*10,Math.sin(angle)*radius);
       this.scene.add(pts);this.fishSchools.push({mesh:pts,angle,radius,speed:.005+Math.random()*.005,y:pts.position.y});
       const species=['cc0/real-chaetodon_auriga','cc0/real-zebrasoma_flavescens','cc0/real-pomacanthus_imperator','cc0/real-thunnus_albacares','cc0/real-sardina_pilchardus','cc0/real-mobula_birostris'][s%6];
       loadCreature(species).then(model=>{
         if(!model||!pts.parent)return;
-        for(let k=0;k<2;k++){
+        for(let k=0;k<1;k++){
           const fish=model.clone(true),a=k*3.141+Math.random(),rr=3+Math.random()*6;
           fish.position.set(Math.cos(a)*rr,(Math.random()-.5)*3,Math.sin(a)*rr);
           fish.rotation.y=a;fish.scale.setScalar(.3+Math.random()*.18);pts.add(fish);
@@ -470,15 +473,15 @@ export class Ocean {
     // A few bubble streams: enough for motion, not a wall of particles.
     const bubbleGeo=new THREE.SphereGeometry(1,8,6);
     const bubbleMat=new THREE.MeshBasicMaterial({color:0xc8f5ff,transparent:true,opacity:.2,depthWrite:false,blending:THREE.AdditiveBlending});
-    for(let i=0;i<5;i++){
-      const a=Math.random()*6.28,r=26+Math.random()*130,x=Math.cos(a)*r,z=Math.sin(a)*r;
-      for(let j=0;j<4;j++){const b=new THREE.Mesh(bubbleGeo,bubbleMat);const s=.12+Math.random()*.26;b.scale.setScalar(s);b.position.set(x+(Math.random()-.5)*3,-3+Math.random()*24,z+(Math.random()-.5)*3);this.scene.add(b);this.bubbles.push({mesh:b,baseX:b.position.x,baseZ:b.position.z,speed:.6+Math.random()*1.2,phase:Math.random()*6.28});}
+    for(let i=0;i<4;i++){
+      const a=Math.random()*6.28,r=42+Math.random()*150,x=Math.cos(a)*r,z=Math.sin(a)*r;
+      for(let j=0;j<2;j++){const b=new THREE.Mesh(bubbleGeo,bubbleMat);const s=.12+Math.random()*.26;b.scale.setScalar(s);b.position.set(x+(Math.random()-.5)*3,-3+Math.random()*24,z+(Math.random()-.5)*3);this.scene.add(b);this.bubbles.push({mesh:b,baseX:b.position.x,baseZ:b.position.z,speed:.6+Math.random()*1.2,phase:Math.random()*6.28});}
     }
     // CC0 crabs shelter among the rocks on the sea floor.
     loadCreature('cc0/crab').then(model=>{
       if(!model)return;
-      for(let i=0;i<7;i++){
-        const a=i*2.399,r=32+Math.sqrt(i/7)*160,crab=model.clone(true);
+      for(let i=0;i<3;i++){
+        const a=i*2.399,r=48+Math.sqrt(i/3)*165,crab=model.clone(true);
         const scale=.45+Math.random()*.3;crab.scale.setScalar(scale);
         const x=Math.cos(a)*r,z=Math.sin(a)*r;
         crab.position.set(x,groundY(x,z,scale*.42),z);crab.rotation.y=a;this.landmarks.add(crab);this.wrapItems.push({mesh:crab,lift:scale*.42,seed:i+120});
@@ -489,11 +492,11 @@ export class Ocean {
   // Keep decoration near the action without ever showing a world edge. Each
   // scanned landmark is recycled around the player when it falls too far behind.
   wrapLandmarks(px,pz){
-    const range=230;
+    const range=340;
     for(const item of this.wrapItems||[]){
       const m=item.mesh;if(!m)continue;
       if(Math.abs(m.position.x-px)<range&&Math.abs(m.position.z-pz)<range)continue;
-      const a=item.seed*2.399963+pz*.0011+px*.0007,r=72+((item.seed*47)%158);
+      const a=item.seed*2.399963+pz*.0011+px*.0007,r=150+((item.seed*47)%190);
       const x=px+Math.cos(a)*r,z=pz+Math.sin(a)*r;
       m.position.set(x,groundY(x,z,item.lift||0),z);
     }
@@ -515,6 +518,7 @@ export class Ocean {
     const player=game.player;
     this.followOcean(player.x,player.z);
     this.wrapLandmarks(player.x,player.z);
+    if(this.localLight)this.localLight.position.set(player.x,14,player.z+6);
     const period=periodFor(game);
     const wanted=this.periodOverride>=0?this.periodOverride:periodIndexFor(game);
     if(wanted!==this.currentPeriod)this.applyPeriod(wanted);
@@ -531,7 +535,7 @@ export class Ocean {
     const bg=new THREE.Color(period.background).multiply(new THREE.Color(...waterTint));
     if(!this.scene.background?.isTexture)this.scene.background.lerp(bg,Math.min(1,dt*2));
     this.scene.fog.color.lerp(bg,Math.min(1,dt*2));
-    const floorGain=this.quality==='low'?2.8:this.quality==='medium'?1.8:1.35;
+    const floorGain=this.quality==='low'?3.0:this.quality==='medium'?2.45:2.15;
     this.floorMaterial.uniforms.uDeep.value.lerp(new THREE.Color(period.deep[0]*floorTint[0]*floorGain,period.deep[1]*floorTint[1]*floorGain,period.deep[2]*floorTint[2]*floorGain),Math.min(1,dt*3));
     this.floorMaterial.uniforms.uShallow.value.lerp(new THREE.Color(period.shallow[0]*floorTint[0]*floorGain,period.shallow[1]*floorTint[1]*floorGain,period.shallow[2]*floorTint[2]*floorGain),Math.min(1,dt*3));
     const bed=period.seabedTint||[1,1,1];

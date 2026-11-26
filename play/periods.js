@@ -7,7 +7,7 @@ export const PERIODS=[
   {
     id:'archaean',name:'原初之海',en:'THE PRIMORDIAL SEA',era:'太古宙 · 35 亿年前',
     background:'#041520',deep:[0.006,0.034,0.060],shallow:[0.014,0.072,0.118],
-    fog:.0024,key:0xbfe8d2,fill:0x2e7d92,rim:0x7fe0b8,ambient:0x89d4b4,
+    fog:.0016,key:0xbfe8d2,fill:0x2e7d92,rim:0x7fe0b8,ambient:0x89d4b4,
     dust:0x6fd8b0,kelp:0x1f5a4a,coral:0x2c6a58,
     fauna:['原核孢子','热泉菌毯','古菌群落','铁细菌壳','硫光菌簇','磁性菌带'],
     weights:[.42,.05,.10,.05,.18,.20],
@@ -20,7 +20,7 @@ export const PERIODS=[
   {
     id:'cambrian',name:'寒武纪海洋',en:'THE CAMBRIAN EXPLOSION',era:'寒武纪 · 5.4 亿年前',
     background:'#05202e',deep:[0.008,0.045,0.078],shallow:[0.019,0.095,0.150],
-    fog:.0022,key:0xd8ffe8,fill:0x54b6d6,rim:0x9affd8,ambient:0x9de0cc,
+    fog:.0015,key:0xd8ffe8,fill:0x54b6d6,rim:0x9affd8,ambient:0x9de0cc,
     dust:0x8fe8d0,kelp:0x2b7f66,coral:0xffab8a,
     fauna:['三叶虫幼体','奇虾猎手','海绵虫','小壳动物','腕足幼体','盾甲游虫'],
     weights:[.32,.12,.10,.10,.18,.18],
@@ -33,7 +33,7 @@ export const PERIODS=[
   {
     id:'devonian',name:'古生代礁海',en:'THE PALAEOZOIC REEF',era:'奥陶纪—泥盆纪 · 4 亿年前',
     background:'#052435',deep:[0.010,0.052,0.096],shallow:[0.023,0.112,0.180],
-    fog:.0020,key:0xe4fff0,fill:0x4f9fd0,rim:0x8ff0d4,ambient:0x9fd8c8,
+    fog:.0014,key:0xe4fff0,fill:0x4f9fd0,rim:0x8ff0d4,ambient:0x9fd8c8,
     dust:0x9ae6d8,kelp:0x338a6e,coral:0xff9c7a,
     fauna:['浮游孢','甲胄幼鱼','板足鲎','珊瑚虫','盾皮幼鱼','海百合苗'],
     weights:[.28,.16,.10,.14,.16,.16],
@@ -46,7 +46,7 @@ export const PERIODS=[
   {
     id:'mesozoic',name:'中生代深渊',en:'THE MESOZOIC ABYSS',era:'三叠纪—白垩纪 · 1.5 亿年前',
     background:'#041b2b',deep:[0.007,0.041,0.082],shallow:[0.018,0.098,0.165],
-    fog:.0019,key:0xd6f2ff,fill:0x3f86c4,rim:0x7fd8ff,ambient:0x8fc4dc,
+    fog:.0013,key:0xd6f2ff,fill:0x3f86c4,rim:0x7fd8ff,ambient:0x8fc4dc,
     dust:0x8fd8f0,kelp:0x2a7258,coral:0xc79bff,
     fauna:['菊石','箭石','海百合','厚壳菊石','鹦鹉螺','滑齿龙幼体'],
     weights:[.24,.20,.16,.10,.14,.16],
@@ -59,7 +59,7 @@ export const PERIODS=[
   {
     id:'neogene',name:'巨兽之海',en:'THE SEA OF GIANTS',era:'中新世—现代 · 2000 万年前',
     background:'#052033',deep:[0.009,0.049,0.096],shallow:[0.022,0.110,0.180],
-    fog:.0018,key:0xe8fff4,fill:0x5aa8cc,rim:0x9fe8d0,ambient:0xa8ddcc,
+    fog:.0012,key:0xe8fff4,fill:0x5aa8cc,rim:0x9fe8d0,ambient:0xa8ddcc,
     dust:0xa8eed8,kelp:0x3a9a72,coral:0xffb08a,
     fauna:['浮游磷虾','剑射鱼','水母群','巨齿鲨幼体','旗鱼群','翻车鱼幼体'],
     weights:[.28,.18,.14,.08,.16,.16],
@@ -72,7 +72,7 @@ export const PERIODS=[
   {
     id:'modern',name:'深海纪元',en:'THE MODERN ABYSS',era:'现代 · 深海',
     background:'#031729',deep:[0.006,0.032,0.072],shallow:[0.014,0.082,0.150],
-    fog:.0017,key:0xdaf0ff,fill:0x3d7fbe,rim:0x86d8ff,ambient:0x8ab8d4,
+    fog:.0011,key:0xdaf0ff,fill:0x3d7fbe,rim:0x86d8ff,ambient:0x8ab8d4,
     dust:0x9fe0ff,kelp:0x2c7f6a,coral:0xb59cff,
     fauna:['深海磷虾','灯笼鱼','冠水母','鲸落群落','鮟鱇幼体','吸血乌贼'],
     weights:[.26,.14,.18,.08,.16,.18],

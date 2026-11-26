@@ -36,7 +36,7 @@ function addVertexAO(root){
     if(!color){color=new THREE.Float32BufferAttribute(new Float32Array(pos.count*3),3);o.geometry.setAttribute('color',color);}
     for(let i=0;i<pos.count;i++){
       const h=(pos.getY(i)-min)/span;
-      const ao=.72+.28*Math.min(1,Math.max(0,h));
+      const ao=.82+.18*Math.min(1,Math.max(0,h));
       color.setXYZ(i,color.getX(i)*ao,color.getY(i)*ao,color.getZ(i)*ao);
     }
     color.needsUpdate=true;
@@ -60,9 +60,7 @@ function addCornealGleam(root,name){
 }
 export const CREATURE_MODELS={
   trilobite:'trilobite',anomalocaris:'anomalocaris',ammonite:'ammonite',
-  nautilus:'nautilus',dunkleosteus:'dunkleosteus',megalodon:'megalodon',
-  mosasaur:'mosasaur',plesiosaur:'plesiosaur',basilosaurus:'basilosaurus',
-  shark:'shark',coelacanth:'coelacanth',jellyfish:'jellyfish'
+  dunkleosteus:'dunkleosteus',mosasaur:'mosasaur',jellyfish:'cc0/jellyfish-real'
 };
 // Load a creature GLB. Names prefixed "cc0/" resolve under assets/creatures/cc0/
 // for legally-sourced Creative Commons models (see ASSET-CREDITS.md).
@@ -89,7 +87,7 @@ export function loadCreature(name){
           o.castShadow=true;o.receiveShadow=true;
           if(name==='coast_rocks'&&o.geometry?.attributes?.color){
             const colors=o.geometry.attributes.color;
-            for(let i=0;i<colors.array.length;i++)colors.array[i]*=.48;
+            for(let i=0;i<colors.array.length;i++)colors.array[i]*=.72;
             colors.needsUpdate=true;
           }
           if(!o.material)return;
@@ -99,14 +97,17 @@ export function loadCreature(name){
           for(const m of (Array.isArray(o.material)?o.material:[o.material])){
             if('roughness' in m)m.roughness=eye?.075:jelly?.14:rock?.96:Math.max(.24,Math.min(.56,m.roughness??.46));
             if('metalness' in m)m.metalness=jelly||rock||eye?0:Math.min(.18,m.metalness??0);
-            if('envMapIntensity' in m)m.envMapIntensity=eye?2.1:jelly?1.6:rock?.55:1.35;
+            if('envMapIntensity' in m)m.envMapIntensity=eye?2.4:jelly?1.9:rock?.9:1.85;
             if('clearcoat' in m){m.clearcoat=eye?.95:jelly?.32:.26;m.clearcoatRoughness=eye?.06:jelly?.18:.24;}
             if(!eye&&!jelly&&o.geometry?.attributes?.uv){
               if(!m.normalMap){m.normalMap=detail.normal;if(m.normalScale)m.normalScale.set(.18,.18);}
               if(!m.roughnessMap)m.roughnessMap=detail.roughness;
             }
             if(eye&&m.color)m.color.lerp(new THREE.Color(0xffffff),.22);
-            if(rock&&m.color)m.color.multiplyScalar(.52);
+            if(rock&&m.color)m.color.multiplyScalar(.78);
+            // Deep water absorbs most bounce light. A very small cool emissive
+            // floor keeps real scans readable without making them glow.
+            if(m.emissive&&!jelly){m.emissive.lerp(new THREE.Color(0x2b5663),.38);m.emissiveIntensity=Math.max(.18,m.emissiveIntensity??0);}
             if(jelly){m.side=THREE.DoubleSide;if('transmission' in m)m.transmission=.18;}
             m.needsUpdate=true;
           }
@@ -126,12 +127,12 @@ export function hasCreature(name){return cache.get(name)?.userData?.ready===true
 // 1 hunter, 2 pulsing drifter, 3 armoured, 4 apex. Every entry is a real
 // photographed/scanned model from ASSET-CREDITS.md — no procedural stand-ins.
 const PERIOD_FAUNA={
-  0:['cc0/real-sardina_pilchardus','cc0/real-gadus_morhua','cc0/jellyfish-real','cc0/real-raja_clavata','cc0/real-galeocerdo_cuvier','cc0/real-myctophum_punctatum','cc0/real-clupea_harengus'],
-  1:['cc0/real-chaetodon_auriga','cc0/real-latimeria_chalumnae','cc0/jellyfish-real','cc0/real-ostracion_cubicum','cc0/real-pterois_volitans','cc0/real-lutjanus_kasmira','cc0/real-chauliodus_sloani'],
-  2:['cc0/real-zebrasoma_flavescens','cc0/real-pagrus_major','cc0/jellyfish-real','cc0/real-hippocampus_kuda','cc0/real-thunnus_albacares','cc0/real-paracanthurus_hepatus','cc0/real-synchiropus_splendidus'],
-  3:['cc0/real-clupea_harengus','cc0/real-sebastes_norvegicus','cc0/jellyfish-real','cc0/real-diodon_holocanthus','cc0/real-carcharodon_carcharias','cc0/real-anoplogaster_cornuta','cc0/real-makaira_nigricans'],
-  4:['cc0/real-sardina_pilchardus','cc0/real-scomber_scombrus','cc0/jellyfish-real','cc0/real-mola_mola','cc0/real-prionace_glauca','cc0/real-coryphaena_hippurus','cc0/real-istiophorus_platypterus'],
-  5:['cc0/real-katsuwonus_pelamis','cc0/real-salmo_salar','cc0/jellyfish-real','cc0/real-mobula_birostris','cc0/real-xiphias_gladius','cc0/real-myctophum_punctatum','cc0/real-zanclus_cornutus']
+  0:['cc0/jellyfish-real','cc0/hydrozoan-crypthelia-viridis','cc0/jellyfish-real','cc0/coral-goniastrea','cc0/hydrozoan-distichopora-violacea','cc0/coral-porites-lobata','cc0/jellyfish-real'],
+  1:['trilobite','anomalocaris','cc0/jellyfish-real','trilobite','cc0/coral-goniastrea','cc0/coral-porites-lobata','anomalocaris'],
+  2:['cc0/real-latimeria_chalumnae','dunkleosteus','cc0/jellyfish-real','cc0/coral-acropora','cc0/real-galeocerdo_cuvier','cc0/hydrozoan-distichopora-borealis','cc0/coral-pavonia'],
+  3:['ammonite','mosasaur','cc0/jellyfish-real','ammonite','cc0/real-carcharodon_carcharias','cc0/hydrozoan-distichopora-violacea','ammonite'],
+  4:['cc0/real-sardina_pilchardus','cc0/real-carcharodon_carcharias','cc0/jellyfish-real','cc0/real-ostracion_cubicum','cc0/whale','cc0/dolphin','cc0/real-mobula_birostris'],
+  5:['cc0/real-myctophum_punctatum','cc0/real-himantolophus_groenlandicus','cc0/jellyfish-real','cc0/crab','cc0/real-macropinna_microstoma','cc0/real-anoplogaster_cornuta','cc0/starfish-pycnopodia']
 };
 export function faunaModelFor(kind,periodIndex=0){
   const row=PERIOD_FAUNA[Math.max(0,Math.min(5,periodIndex|0))];

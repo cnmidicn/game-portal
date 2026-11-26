@@ -62,8 +62,8 @@ export class Game {
     this.traits=[];this.evoCount=0;this.choices=[];this.combo=0;this.comboTime=0;this.bestCombo=0;this.eaten=0;this.species=new Set();this.spawnClock=0;this.won=false;this.danger=false;this.peakMass=startMass;this.endless=false;
     this.specializations=[];this.legacyEvolution=false;this.lineage='';this.lineageNodes=[];this.beatPosition=0;this.lastRhythmBeat=0;this.rhythmEnergy=0;this.rhythmHits=0;this.rhythmBonus=0;this.crescendoTime=0;
     this.stats={food:0,prey:0,dash:0,normalPrey:0,shells:0,structures:0,bosses:0};this.noticeCd=0;this.chorusCd=0;this.seenSynergies=new Set();this.completedChallenges=0;this.challengeIndex=0;this.challengeOrder=this.shuffle(CHALLENGES);this.challenge=null;this.challengeWait=0;this.nextChallenge();
-    for(let i=0;i<240;i++)this.spawnFood(i<170?35:135);
-    for(let i=0;i<40;i++)this.spawnCreature(true);
+    for(let i=0;i<190;i++)this.spawnFood(i<130?42:155);
+    for(let i=0;i<28;i++)this.spawnCreature(true);
     // An inviting, immediately readable trail in front of the starting cell.
     for(let i=0;i<18;i++){let a=i*.65;this.food.push({id:this.allocateId(),x:Math.sin(a)*(3+i*.34),z:-3-i*.68,value:1,hue:i%4});}
     initWorld(this);
@@ -85,7 +85,7 @@ export class Game {
     const p=this.player,a=this.rnd(0,Math.PI*2);
     const ceiling=this.endless?Math.max(1800,p.mass*1.5):this.goalMass*.8;
     const tiers=initial?[4,5,6,11,17,28,42,70]:[Math.max(4,p.mass*.2),p.mass*.38,p.mass*.6,p.mass*1.3,p.mass*1.8].map(m=>Math.min(ceiling,m));
-    const mass=tiers[Math.floor(this.random()*tiers.length)],r=this.rnd(initial?(mass>p.mass?38:10):26,initial?(mass>p.mass?95:50):76);
+    const mass=tiers[Math.floor(this.random()*tiers.length)],r=this.rnd(initial?(mass>p.mass?56:18):34,initial?(mass>p.mass?110:68):96);
     this.creatures.push({id:this.allocateId(),x:p.x+Math.cos(a)*r,z:p.z+Math.sin(a)*r,mass,radius:radiusFor(mass),angle:this.rnd(0,7),phase:this.rnd(0,8),kind:pickFaunaKind(periodFor(this),this.random.bind(this)),hue:Math.floor(this.rnd(0,FAUNA_TINTS.length)),variant:this.biome.id,stun:0,boss:false,state:'drift',attackClock:0});
     if(this.rule().rare&&this.random()<this.rule().rare)this.creatures.at(-1).rare=true;
   }
@@ -105,7 +105,7 @@ export class Game {
   nextChapter(){
     if(this.mode!=='expedition'||this.status!=='interlude'||this.chapter>=2)return false;
     this.chapter++;this.sceneEpoch++;this.biome=BIOMES.find(b=>b.id===CHAPTERS[this.chapter].biome);this.goalMass=CHAPTERS[this.chapter].goal;this.health=this.maxHealth;this.invincible=5;this.player.x=this.player.z=this.player.vx=this.player.vz=0;this.food=[];this.creatures=[];this.spawnClock=0;initWorld(this);
-    for(let i=0;i<160;i++)this.spawnFood(i<80?45:130);for(let i=0;i<18;i++)this.spawnCreature();
+    for(let i=0;i<120;i++)this.spawnFood(i<60?50:145);for(let i=0;i<14;i++)this.spawnCreature();
     this.status='playing';this.emit('chapter',{chapter:this.chapter});this.offerEvolution(true);return true;
   }
   specialized(id){return this.specializations.includes(id);}
@@ -248,9 +248,9 @@ export class Game {
     if(this.status!=='playing')return;
     if(this.mode!=='horde'&&this.spawnClock>1&&!(this.mode==='expedition'&&this.chapter===2&&this.bossDefeated)){this.spawnClock=0;
       this.food=this.food.filter(f=>Math.hypot(f.x-p.x,f.z-p.z)<110);
-      for(let i=0;i<16&&this.food.length<300;i++)this.spawnFood(35+p.radius*2);
+      for(let i=0;i<10&&this.food.length<220;i++)this.spawnFood(42+p.radius*2);
       this.creatures=this.creatures.filter(c=>c.boss||Math.hypot(c.x-p.x,c.z-p.z)<120);
-      const population=this.stage>=3?18:this.stage>=2?28:42;
+      const population=this.stage>=3?10:this.stage>=2?16:24;
       if(this.creatures.length>population+1){const bosses=this.creatures.filter(c=>c.boss),others=this.creatures.filter(c=>!c.boss).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z));this.creatures=[...bosses,...others.slice(0,population-bosses.length)];}
       while(this.creatures.length<population)this.spawnCreature();
       const echoGate=this.mode!=='expedition'||this.echoes===3;

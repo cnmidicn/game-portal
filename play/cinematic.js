@@ -110,7 +110,7 @@ export class CinematicPass{
       shafts:{value:this.shafts.texture},ao:{value:this.ao.texture},lut:{value:this.filmLUT},
       tDepth:{value:this.depthTarget.texture},uInvProj:{value:new T.Matrix4()},
       resolution:{value:new T.Vector2(1,1)},exposure:{value:1.45},boost:{value:0},bass:{value:0},
-      bloomStrength:{value:1.},aoStrength:{value:.72},underwater:{value:1.},vignette:{value:.34},grain:{value:.014},time:{value:0},
+      bloomStrength:{value:1.},aoStrength:{value:.72},underwater:{value:1.},vignette:{value:.22},grain:{value:.006},time:{value:0},
       motion:{value:0},dof:{value:0},motionBlur:{value:0},lensFlare:{value:0},filmLut:{value:1},
       focus:{value:34},sun:{value:new T.Vector2(.5,1.08)},waterTint:{value:new T.Color(0x0a2a34)},waterLayers:{value:2}
     },`varying vec2 p;uniform sampler2D image;uniform sampler2D bloom0;uniform sampler2D bloom1;uniform sampler2D bloom2;uniform sampler2D shafts;uniform sampler2D ao;uniform sampler2D lut;
@@ -126,9 +126,9 @@ export class CinematicPass{
         c.r=sane(texture2D(image,p+fringe).rgb).r;
         c.b=sane(texture2D(image,p-fringe).rgb).b;
         if(motionBlur>.01){vec3 mb=c;for(int i=1;i<=5;i++){float k=float(i)/5.;mb+=sane(texture2D(image,clamp(p+(p-.5)*motionBlur*k*.045,vec2(0.),vec2(1.))).rgb);}c=mb/6.;}
-        vec3 bloom=texture2D(bloom0,p).rgb*.56+texture2D(bloom1,p).rgb*.29+texture2D(bloom2,p).rgb*.15;
+        vec3 bloom=texture2D(bloom0,p).rgb*.66+texture2D(bloom1,p).rgb*.26+texture2D(bloom2,p).rgb*.08;
         c+=bloom*(bloomStrength+boost*.16+bass*.07);
-        if(lensFlare>.01){vec2 dir=(sun-p)*.10;vec3 flare=vec3(0.);for(int i=0;i<5;i++){float k=float(i)/4.;flare+=texture2D(bloom0,clamp(p+dir*k,vec2(0.),vec2(1.))).rgb*(1.-k*.7);vec2 ghost=clamp(vec2(1.)-p-dir*(k+.3),vec2(0.),vec2(1.));flare+=texture2D(bloom0,ghost).rgb*(1.-k)*.24;}c+=flare*lensFlare*.014;}
+        if(lensFlare>.01){vec2 dir=(sun-p)*.10;vec3 flare=vec3(0.);for(int i=0;i<5;i++){float k=float(i)/4.;flare+=texture2D(bloom0,clamp(p+dir*k,vec2(0.),vec2(1.))).rgb*(1.-k*.7);vec2 ghost=clamp(vec2(1.)-p-dir*(k+.3),vec2(0.),vec2(1.));flare+=texture2D(bloom0,ghost).rgb*(1.-k)*.24;}c+=flare*lensFlare*.008;}
         c+=texture2D(shafts,p).rgb;
         c*=mix(1.,texture2D(ao,p).r,aoStrength);
         float d=readDepth(p);float dist=clamp(-viewPosition(p,d,uInvProj).z,0.,1800.);
@@ -138,7 +138,7 @@ export class CinematicPass{
         c.r*=mix(1.,.46,absorb);c.g*=mix(1.,.77,absorb);c.b*=mix(1.,1.05,absorb);
         vec3 inScatter=mix(vec3(.004,.026,.040),vec3(.012,.060,.098),smoothstep(80.,900.,dist));
         c+=inScatter*water*.9;
-        if(waterLayers>.5){float haze=sin(p.x*23.+time*.11)*sin(p.y*17.-time*.07)+.6*sin((p.x+p.y)*11.+time*.05);c+=waterTint*water*(.0016*waterLayers)*(1.+.35*haze);}
+        if(waterLayers>.5){float haze=sin(p.x*23.+time*.11)*sin(p.y*17.-time*.07)+.6*sin((p.x+p.y)*11.+time*.05);c+=waterTint*water*(.00045*waterLayers)*(1.+.25*haze);}
         if(dof>.01){float coc=clamp(abs(dist-focus)/(focus*1.7),0.,1.)*dof;if(coc>.01){float r=coc*.0048;vec3 blur=sane(texture2D(image,p).rgb);blur+=sane(texture2D(image,clamp(p+vec2(r,0.),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p-vec2(r,0.),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p+vec2(0.,r),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p-vec2(0.,r),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p+vec2(r,r)*.7,vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p-vec2(r,r)*.7,vec2(0.),vec2(1.))).rgb);c=mix(c,blur/7.,coc*.68);}}
         // Gentle local contrast keeps sediment grain and scan details readable
         // after bloom and scattering without haloing the silhouettes.
