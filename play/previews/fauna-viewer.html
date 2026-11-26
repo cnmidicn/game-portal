@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>史前生物几何预览</title>
+<style>body{margin:0;background:#0a2630;color:#dff5e8;font:14px system-ui}#label{position:fixed;left:20px;top:16px;z-index:2;background:#04181dcc;padding:10px 16px;border:1px solid #7bd8b044;border-radius:8px}#label b{font-size:17px}#label span{display:block;color:#9dcfc0;font-size:12px;margin-top:3px}</style></head><body>
+<div id="label"><b id="name">—</b><span id="meta">程序化古生物几何</span></div>
+<script type="module">
+import * as THREE from '../vendor/three.module.js';
+import {createDunkleosteus,createMosasaur} from '../prehistoric-fauna.js';
+const p=new URLSearchParams(location.search),name=p.get('model')||'dunkleosteus';
+document.getElementById('name').textContent=name==='mosasaur'?'沧龙 · Mosasaurus':'邓氏鱼 · Dunkleosteus';
+const scene=new THREE.Scene();scene.background=new THREE.Color('#0a2630');scene.fog=new THREE.FogExp2('#0a2630',.01);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);camera.position.set(11,3,0);camera.lookAt(0,0,0);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xd8fff0,0x0a3038,2));const key=new THREE.DirectionalLight(0xffe8c8,2.4);key.position.set(-4,6,5);scene.add(key);const rim=new THREE.DirectionalLight(0x7fd8ff,1.2);rim.position.set(4,2,-5);scene.add(rim);
+const model=name==='mosasaur'?createMosasaur():createDunkleosteus();
+const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+model.position.sub(center);const k=7/Math.max(size.x,size.y,size.z);model.scale.setScalar(k);scene.add(model);
+document.getElementById('meta').textContent=`${Math.round(size.x)}×${Math.round(size.y)}×${Math.round(size.z)} units · scaled ×${k.toFixed(2)}`;
+renderer.render(scene,camera);window.__ready=true;
+</script></body></html>

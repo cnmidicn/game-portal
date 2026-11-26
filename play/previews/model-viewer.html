@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>古生物模型预览</title>
+<style>body{margin:0;background:#0a2630;color:#dff5e8;font:14px system-ui;overflow:hidden}#stage{width:100vw;height:100vh}#label{position:fixed;left:20px;top:16px;z-index:2;background:#04181dcc;padding:10px 16px;border:1px solid #7bd8b044;border-radius:8px}#label b{font-size:17px}#label span{display:block;color:#9dcfc0;font-size:12px;margin-top:3px}</style></head><body>
+<div id="label"><b id="name">加载中…</b><span id="meta"></span></div><div id="stage"></div>
+<script type="module">
+import * as THREE from '../vendor/three.module.js';
+import {GLTFLoader} from '../vendor/loaders/GLTFLoader.js';
+const p=new URLSearchParams(location.search),name=p.get('model')||'trilobite';
+document.getElementById('name').textContent=name;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#0a2630');scene.fog=new THREE.FogExp2('#0a2630',.006);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);camera.position.set(0,4.5,3.5);camera.lookAt(0,0,0);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.getElementById('stage').appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xd8fff0,0x0a3038,2));const key=new THREE.DirectionalLight(0xffe8c8,2.4);key.position.set(-4,6,5);scene.add(key);const rim=new THREE.DirectionalLight(0x7fd8ff,1.2);rim.position.set(4,2,-5);scene.add(rim);
+const loader=new GLTFLoader();loader.load(`../assets/creatures/${name}.glb`,gltf=>{
+  const root=gltf.scene,box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+  const k=2.8/Math.max(size.x,size.y,size.z);root.position.sub(center);root.scale.setScalar(k);scene.add(root);
+  document.getElementById('meta').textContent=`${Math.round(size.x)}×${Math.round(size.y)}×${Math.round(size.z)} units · scaled ×${k.toFixed(2)}`;
+  root.rotation.y=.2;renderer.render(scene,camera);window.__ready=true;let a=.35;function draw(){a+=.004;root.rotation.y=a;renderer.render(scene,camera);requestAnimationFrame(draw);}if(!location.search.includes('static'))draw();
+},p=>{document.getElementById('meta').textContent='loading '+(p.loaded/1024|0)+'KB';},e=>{document.getElementById('meta').textContent='LOAD ERROR: '+String(e&&e.message||e);});
+</script></body></html>

@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>沧龙 · 中生代场景截图</title>
+<style>body{margin:0;background:#103a52;overflow:hidden}#stage{position:fixed;inset:0}#label{position:fixed;left:24px;top:20px;z-index:2;background:#051d2bcc;border:1px solid #7fd8ff55;border-radius:10px;padding:12px 18px;color:#e8f7ff;font:14px system-ui;letter-spacing:.5px}#label b{font-size:19px}#label span{display:block;color:#9fd8f0;font-size:12px;margin-top:4px}</style></head><body>
+<div id="stage"></div>
+<div id="label"><b>中生代深渊 · 沧龙 Mosasaurus</b><span id="meta">THE MESOZOIC ABYSS · 三叠纪—白垩纪 · 真实 GLB 顶点色模型</span></div>
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+import {Ocean} from './scene.js';
+import {Game} from './game.js';
+import {loadCreature} from './creatures.js';
+
+const stage=document.getElementById('stage');
+const ocean=new Ocean(stage);
+ocean.setQuality('high');
+const game=new Game();
+game.reset('lagoon');
+game.status='playing';
+game.stage=3;                 // 中生代深渊
+game.player.mass=400;
+game.player.x=12.54;game.player.z=12.89;
+ocean.periodOverride=3;
+ocean.applyPeriod(3);         // ammonite 场景（含 loadCreature('mosasaur')）
+
+// 直接加载真实沧龙 GLB 并在前景放大定位，确保主体清晰可见。
+const model=await loadCreature('mosasaur');
+const meta=document.getElementById('meta');
+if(model){
+  const hero=model.clone(true);
+  hero.scale.setScalar(5.5);
+  hero.position.set(12.54,2.4,12.89);
+  ocean.scene.add(hero);
+  meta.textContent='THE MESOZOIC ABYSS · 真实 GLB 顶点色沧龙 · 含菊石/海百合/海藻';
+}else meta.textContent='LOAD ERROR: mosasaur GLB not loaded';
+
+let t=0,frames=0;
+function frame(){
+  t+=1/60;frames++;
+  ocean.update(game,1/60,t);
+  ocean.hero.visible=false;
+  ocean.camera.position.set(20,7.5,24);
+  ocean.camera.lookAt(12.54,2.4,12.89);
+  ocean.renderer.render(ocean.scene,ocean.camera);
+  if(frames>=30)window.__ready=true;
+  requestAnimationFrame(frame);
+}
+frame();
+</script></body></html>

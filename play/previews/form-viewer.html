@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>成长形态预览</title>
+<style>body{margin:0;background:#061c23;color:#dff5e8;font:14px system-ui;overflow:hidden}#stage{width:100vw;height:100vh;display:block}#label{position:fixed;left:24px;top:20px;z-index:2;background:#04181dbb;padding:12px 18px;border:1px solid #7bd8b044;border-radius:10px}#label b{font-size:18px;display:block;margin-bottom:4px}#label span{color:#9dcfc0;font-size:12px}</style></head><body>
+<div id="label"><b id="name">—</b><span id="meta">—</span></div><div id="stage"></div>
+<script type="module">
+import * as THREE from '../vendor/three.module.js';
+import {createMorphology,animateMorphology,formIndexForMass,formWeights,FORMS,SIGNATURES,signatureWeight} from '../morphology.js';
+import {CinematicPass} from '../cinematic.js';
+import {PERIODS} from '../periods.js';
+import {buildPeriodScenery} from '../period-scenery.js';
+const params=new URLSearchParams(location.search),mass=Number(params.get('mass')||8),form=Number(params.get('form')||formIndexForMass(mass)),zoom=Number(params.get('zoom')||1),periodIdx=Math.min(5,Math.max(0,Number(params.get('period')||0)));
+const scene=new THREE.Scene();scene.background=new THREE.Color('#061c23');scene.fog=new THREE.FogExp2('#061c23',.008);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,500);camera.position.set(5.2*zoom,6.5*zoom,9.4*zoom);camera.lookAt(0,0,0);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;document.getElementById('stage').appendChild(renderer.domElement);const cine=new CinematicPass(renderer);cine.resize(innerWidth,innerHeight);
+scene.add(new THREE.HemisphereLight(0xa8f0dc,0x06222a,1.5));const sun=new THREE.DirectionalLight(0xe6fff0,3);sun.position.set(-8,14,10);scene.add(sun);const fill=new THREE.DirectionalLight(0x4fb6d8,1.2);fill.position.set(10,4,-8);scene.add(fill);const rim=new THREE.DirectionalLight(0x9affd8,1);rim.position.set(2,-3,8);scene.add(rim);
+const bodyMat=new THREE.MeshStandardMaterial({color:0x8fecc0,emissive:0x2a6b50,emissiveIntensity:.35,roughness:.35,metalness:.05,transparent:true,opacity:.82});
+const m=createMorphology(bodyMat);const root=new THREE.Group();root.add(m.group);
+const shell=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),bodyMat);shell.scale.set(1,.8,1);root.add(shell);
+const core=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:0xc1ffce,emissive:0x38885d,emissiveIntensity:.8,roughness:.25}));core.scale.setScalar(.36);root.add(core);
+const w=formWeights(form);const sig=Math.max(0,...SIGNATURES.map(x=>signatureWeight(x,form)));const bs=Math.max(.42,1-sig*.62);shell.scale.set((1+w.snout*.28)*bs,(.8-w.dorsal*.12)*bs,(1+w.tail*.2)*bs);core.scale.setScalar((.36+form/(FORMS.length-1)*.06)*bs);
+scene.add(root);animateMorphology(m,form,2.5,3);
+const era=PERIODS[periodIdx];scene.background=new THREE.Color(era.background);scene.fog=new THREE.FogExp2(era.background,era.fog*.55);const scenery=buildPeriodScenery(era);scene.add(scenery.group);
+const sigTop=SIGNATURES.map(x=>({x,w:signatureWeight(x,form)})).sort((a,b)=>b.w-a.w)[0];const useSig=sigTop.w>.6;const fw=useSig?FORMS[Math.min(FORMS.length-1,Math.round(sigTop.x.peak))]:FORMS[Math.min(FORMS.length-1,Math.round(form))];document.getElementById('name').textContent=fw.name+'  ·  形态 '+Math.round(form)+'/24';document.getElementById('meta').textContent=era.name+' / '+fw.era+' · 质量 '+mass+' μ'+(mass===8?'':' (演示)');
+let frame=0;function draw(){frame+=.006;root.rotation.y=frame*1.4;animateMorphology(m,form,2.5+frame*8,3);scenery.animate(2.5+frame*8,.016);cine.render(scene,camera,{boost:.1,bass:.05});if(frame<1.2)requestAnimationFrame(draw);}draw();
+window.__ready=true;
+</script></body></html>
