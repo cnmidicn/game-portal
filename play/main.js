@@ -4,7 +4,7 @@ import {Ocean} from './scene.js';
 import {FORMS,BADGES,normalizeArchive,recordRun,dailyBest,autoQuality} from './progression.js';
 import {SPECIES,SYNERGIES,activeSynergies} from './ecology.js';
 import {MORPHS} from './morphology.js';
-import {periodFor,PERIODS} from './periods.js';
+import {periodFor,PERIODS,faunaNameFor} from './periods.js';
 import {CHAPTERS,STRUCTURE_TYPES} from './world.js';
 import {BOSSES} from './bosses.js';
 import {dailyChallenge} from './random.js';
@@ -254,7 +254,7 @@ function updateUI(){
   $('track-name').firstChild.textContent=STAGES[game.stage].track;$('music-status').textContent=music.muted?'声音已关闭':`${game.biome.bpm} BPM · ${game.stage+1} / 5 声部`;
   const lineageLabel=lineageStageName(game),lineageData=LINEAGES.find(l=>l.id===lineageOf(game));$('traits').innerHTML=[...game.traits.map(id=>`<span>${TRAITS.find(t=>t.id===id).name}</span>`),...(lineageLabel?[`<span class="lineage-chip">${lineageData?.icon||'✧'} ${esc(lineageLabel)}</span>`]:[])].join('');const combinations=game.synergies(),branches=game.specializations.map(id=>SPECIALIZATIONS.find(s=>s.id===id));music.voices=new Set(combinations.map(s=>s.id));music.crescendo=game.crescendoTime>0;$('synergy-panel').classList.toggle('hidden',!combinations.length&&!branches.length);$('synergy-list').innerHTML=[...combinations.map(s=>`<div title="${s.desc}">${s.icon} ${s.name}</div>`),...branches.map(s=>`<div class="branch-tag" title="${s.desc}">✧ ${s.name}</div>`)].join('');
   document.body.classList.toggle('crescendo',game.crescendoTime>0);$('rhythm-text').textContent=game.crescendoTime>0?'共鸣高潮 · '+game.crescendoTime.toFixed(0)+'s':'踩拍共鸣 · '+game.rhythmEnergy+' / '+energyTarget(game);$('rhythm-fill').style.width=(game.crescendoTime>0?100:game.rhythmEnergy/energyTarget(game)*100)+'%';$('pulse-orb').classList.toggle('on',beatPhase(game)<.15||beatPhase(game)>.86);
-  const encounter=game.creatures.filter(c=>!c.boss&&c.kind!==0&&Math.hypot(c.x-p.x,c.z-p.z)<p.radius+c.radius+13).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];$('encounter-tip').classList.toggle('hidden',!encounter);if(encounter){$('encounter-name').textContent=SPECIES[encounter.kind].icon+' '+era.fauna[encounter.kind];$('encounter-desc').textContent=era.story+' · '+SPECIES[encounter.kind].tip;}
+  const encounter=game.creatures.filter(c=>!c.boss&&c.kind!==0&&Math.hypot(c.x-p.x,c.z-p.z)<p.radius+c.radius+13).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];$('encounter-tip').classList.toggle('hidden',!encounter);if(encounter){$('encounter-name').textContent=SPECIES[encounter.kind].icon+' '+faunaNameFor(era,encounter.kind);$('encounter-desc').textContent=era.story+' · '+SPECIES[encounter.kind].tip;}
   if(game.mode==='horde'){$('mission-text').textContent=`撑过 ${HORDE_DURATION} 秒 · 当前 ${hordeScore(game)} 分`;$('mission-sub').textContent='敌人从四周涌来 · 吞噬、冲刺、技能清场';}
   else if(game.mode==='survival'){$('mission-text').textContent=p.mass<goal?`慢慢成长至 ${next?.mass||goal} μ`:'寻找守护者，收获永久生物质';$('mission-sub').textContent=`本局结束可转化永久成长 · 基因样本每周上限 ${geneWeeklyCap()}`;}
   else if(game.mode==='daily'){$('mission-text').textContent=game.rule().name+` · ${game.score()} 分`;$('mission-sub').textContent=game.rule().desc;}

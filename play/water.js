@@ -45,7 +45,7 @@ export class WaterOptics {
       this.scene.environmentIntensity += (this.environmentTarget - (this.scene.environmentIntensity ?? 1)) * Math.min(1, dt * 2);
     }
     this.scattering.setRGB(period?.deep?.[0] ?? .014, period?.deep?.[1] ?? .067, period?.deep?.[2] ?? .084);
-    this.scattering.multiplyScalar(4.2);
+    this.scattering.multiplyScalar(3.8);
   }
 
   bindCinematic(cinematic) {

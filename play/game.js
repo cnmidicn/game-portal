@@ -5,7 +5,7 @@ import {tickBoss} from './bosses.js';
 import {SPECIALIZATIONS,specializationChoices} from './evolution.js';
 import {rhythmReward} from './rhythm.js';
 import {dailyRule,ruleForDate} from './daily-rules.js';
-import {periodFor,pickFaunaKind} from './periods.js';
+import {periodFor,pickFaunaKind,FAUNA_TINTS} from './periods.js';
 import {isMode} from './modes.js';
 import {lifeAttributes,survivalReward} from './growth.js';
 import {resetHorde,tickHorde,hordeMotion,registerKill,applyUpgrade,waveForTime,HORDE_DURATION} from './horde.js';
@@ -26,9 +26,9 @@ export const TRAITS = [
   {id:'shell',icon:'⬡',name:'晶体护膜',desc:'立即修复全部护膜，并增加一层护膜上限。',hint:'被动 · 生存保护'}
 ];
 export const BIOMES = [
-  {id:'lagoon',name:'微光浅海',en:'THE LUMINOUS LAGOON',tag:'舒缓探索',desc:'平静水域，适合熟悉吞噬与进化。',color:'#a9f5cb',background:'#061c23',floor:'#103c3a',bpm:80,root:0},
-  {id:'tide',name:'潮汐回廊',en:'THE TIDAL PASSAGE',tag:'顺流捕食',desc:'利用流动的海流，追逐丰盛的营养带。',color:'#91d8f4',background:'#081a30',floor:'#123c62',bpm:88,root:2},
-  {id:'crystal',name:'晶簇深渊',en:'THE CRYSTAL ABYSS',tag:'危险与馈赠',desc:'晶簇蓄力后释放脉冲；紫色预警时远离。',color:'#d5b6f8',background:'#1b142c',floor:'#422853',bpm:92,root:-2}
+  {id:'lagoon',name:'微光浅海',en:'THE LUMINOUS LAGOON',tag:'舒缓探索',desc:'平静水域，适合熟悉吞噬与进化。',color:'#a9f5cb',background:'#061c23',floor:'#103c3a',floorTint:[1,1,1],waterTint:[1,1,1],bpm:80,root:0},
+  {id:'tide',name:'潮汐回廊',en:'THE TIDAL PASSAGE',tag:'顺流捕食',desc:'利用流动的海流，追逐丰盛的营养带。',color:'#91d8f4',background:'#081a30',floor:'#123c62',floorTint:[.78,.94,1.24],waterTint:[.82,.96,1.16],bpm:88,root:2},
+  {id:'crystal',name:'晶簇深渊',en:'THE CRYSTAL ABYSS',tag:'危险与馈赠',desc:'晶簇蓄力后释放脉冲；紫色预警时远离。',color:'#d5b6f8',background:'#1b142c',floor:'#422853',floorTint:[1.22,.78,1.34],waterTint:[1.08,.84,1.22],bpm:92,root:-2}
 ];
 export const EVOLUTIONS=[...TRAITS,...SPECIALIZATIONS,...APEX_NODES];
 const CHALLENGES=[
@@ -38,7 +38,6 @@ const CHALLENGES=[
   {id:'dash',name:'逐浪而行',desc:'使用 4 次冲刺',target:4},
   {id:'survive',name:'生命的韧性',desc:'继续存活 45 秒',target:45}
 ];
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const radiusFor=m=>Math.min(28,.85*Math.sqrt(m/8));
 export class Game {
   constructor(random=Math.random){this.externalRandom=random;this.random=random;this.reset();}
@@ -80,19 +79,19 @@ export class Game {
   start(){this.status='playing';this.emit('start');}
   spawnFood(range=55){
     const a=this.rnd(0,Math.PI*2),r=Math.sqrt(this.random())*range,p=this.player;
-    this.food.push({id:this.allocateId(),x:clamp(p.x+Math.cos(a)*r,-175,175),z:clamp(p.z+Math.sin(a)*r,-175,175),value:this.random()<(this.dailyRule==='bloom'?.42:this.biome.id==='lagoon'?.12:.22)?3:1,hue:Math.floor(this.rnd(0,4))});
+    this.food.push({id:this.allocateId(),x:p.x+Math.cos(a)*r,z:p.z+Math.sin(a)*r,value:this.random()<(this.dailyRule==='bloom'?.42:this.biome.id==='lagoon'?.12:.22)?3:1,hue:Math.floor(this.rnd(0,8))});
   }
   spawnCreature(initial=false){
     const p=this.player,a=this.rnd(0,Math.PI*2);
     const ceiling=this.endless?Math.max(1800,p.mass*1.5):this.goalMass*.8;
     const tiers=initial?[4,5,6,11,17,28,42,70]:[Math.max(4,p.mass*.2),p.mass*.38,p.mass*.6,p.mass*1.3,p.mass*1.8].map(m=>Math.min(ceiling,m));
     const mass=tiers[Math.floor(this.random()*tiers.length)],r=this.rnd(initial?(mass>p.mass?38:10):26,initial?(mass>p.mass?95:50):76);
-    this.creatures.push({id:this.allocateId(),x:clamp(p.x+Math.cos(a)*r,-170,170),z:clamp(p.z+Math.sin(a)*r,-170,170),mass,radius:radiusFor(mass),angle:this.rnd(0,7),phase:this.rnd(0,8),kind:pickFaunaKind(periodFor(this),this.random.bind(this)),stun:0,boss:false,state:'drift',attackClock:0});
+    this.creatures.push({id:this.allocateId(),x:p.x+Math.cos(a)*r,z:p.z+Math.sin(a)*r,mass,radius:radiusFor(mass),angle:this.rnd(0,7),phase:this.rnd(0,8),kind:pickFaunaKind(periodFor(this),this.random.bind(this)),hue:Math.floor(this.rnd(0,FAUNA_TINTS.length)),variant:this.biome.id,stun:0,boss:false,state:'drift',attackClock:0});
     if(this.rule().rare&&this.random()<this.rule().rare)this.creatures.at(-1).rare=true;
   }
   canAbsorb(s){return canAbsorbStructure(this,s);}
   score(){return scoreFor(this);}
-  spawnBoss(){const a=this.rnd(0,7),p=this.player,mass=this.goalMass*.8;this.creatures.push({id:this.allocateId(),x:clamp(p.x+Math.cos(a)*48,-165,165),z:clamp(p.z+Math.sin(a)*48,-165,165),mass,radius:radiusFor(mass),angle:a,phase:0,kind:4,stun:0,boss:true,variant:this.biome.id,requiredMass:this.goalMass,clock:0,state:'guard'});this.emit('boss');}
+  spawnBoss(){const a=this.rnd(0,7),p=this.player,mass=this.goalMass*.8;this.creatures.push({id:this.allocateId(),x:p.x+Math.cos(a)*48,z:p.z+Math.sin(a)*48,mass,radius:radiusFor(mass),angle:a,phase:0,kind:4,hue:0,stun:0,boss:true,variant:this.biome.id,requiredMass:this.goalMass,clock:0,state:'guard'});this.emit('boss');}
   finishBoss(){
     this.bossDefeated=true;this.stats.bosses++;
     if(this.mode==='expedition'){
@@ -146,6 +145,8 @@ export class Game {
     if(c.kind===1)this.dashCd=Math.max(0,this.dashCd-1.25);
     if(c.kind===2)this.abilityCd=Math.max(0,this.abilityCd-2);
     if(c.kind===3){this.stats.shells++;if(this.stats.shells%3===0)heal=true;}
+    if(c.kind===5)this.dashCd=Math.max(0,this.dashCd-.45);
+    if(c.kind===6)this.comboTime+=1.2;
     if(this.hasSynergy('furnace')&&this.stats.normalPrey%6===0)heal=true;
     if(heal&&this.health<this.maxHealth){this.health++;this.emit('repair');}
   }
@@ -198,7 +199,7 @@ export class Game {
   damage(c){
     if(this.invincible>0||(this.dashTime>0&&this.traits.includes('speed')))return;
     this.health--;this.player.mass=Math.max(8,this.player.mass*.88);this.player.radius=radiusFor(this.player.mass);this.invincible=this.specialized('shell-echo')?4:3;this.combo=0;this.comboTime=0;
-    const a=Math.atan2(this.player.z-c.z,this.player.x-c.x);this.player.x=clamp(this.player.x+Math.cos(a)*(c.radius+5),-180,180);this.player.z=clamp(this.player.z+Math.sin(a)*(c.radius+5),-180,180);c.stun=2;
+    const a=Math.atan2(this.player.z-c.z,this.player.x-c.x);this.player.x+=Math.cos(a)*(c.radius+5);this.player.z+=Math.sin(a)*(c.radius+5);c.stun=2;
     if(this.hasSynergy('reactor')){this.pulse(this.player.radius*3+8,3);this.emit('reactor');}
     this.emit('damage',{cause:c.hazard?'crystal':c.kind===2&&c.state==='pulse'?'jelly':'creature'});if(this.health<=0){this.status='dead';this.emit('end',{won:false});}
   }
@@ -219,10 +220,10 @@ export class Game {
     if(this.comboTime===0)this.combo=0;
     const p=this.player,n=Math.hypot(input.x,input.z),speed=(10+p.radius*.35)*(this.traits.includes('speed')?1.22:1)*(this.specialized('speed-current')?1.15:1)*(this.specialized('shell-bastion')?.9:1)*(this.dashTime>0?(this.specialized('speed-blink')?3.4:2.8):1)*(lineageStats(this).speed||1);
     const tx=n>.01?input.x/Math.max(1,n)*speed:0,tz=n>.01?input.z/Math.max(1,n)*speed:0;
-    p.vx+=(tx-p.vx)*Math.min(1,dt*8);p.vz+=(tz-p.vz)*Math.min(1,dt*8);const current=this.currentAt(p.x,p.z);p.x=clamp(p.x+(p.vx+current.x)*dt,-180,180);p.z=clamp(p.z+(p.vz+current.z)*dt,-180,180);
+    p.vx+=(tx-p.vx)*Math.min(1,dt*8);p.vz+=(tz-p.vz)*Math.min(1,dt*8);const current=this.currentAt(p.x,p.z);p.x+=(p.vx+current.x)*dt;p.z+=(p.vz+current.z)*dt;
     const mouth=this.traits.includes('mouth')?1.3:1,magnet=this.traits.includes('magnet');
     for(let i=this.food.length-1;i>=0;i--){const f=this.food[i],dx=p.x-f.x,dz=p.z-f.z,d=Math.hypot(dx,dz);
-      if(this.biome.id==='tide'){const flow=this.currentAt(f.x,f.z);f.x=clamp(f.x+flow.x*dt,-178,178);f.z=clamp(f.z+flow.z*dt,-178,178);}
+      if(this.biome.id==='tide'){const flow=this.currentAt(f.x,f.z);f.x+=flow.x*dt;f.z+=flow.z*dt;}
       const hordePull=this.hordeMagnet||0;
       if((magnet||this.abilityTime>0||hordePull>0)&&d<p.radius+3+(this.specialized('magnet-orbit')?7:0)+(hordePull)+(this.abilityTime>0?(this.specialized('magnet-vortex')?21:9):0)&&d>.05){const pull=Math.min(d,dt*(this.abilityTime>0?16:this.specialized('magnet-orbit')?9:hordePull>0?10:6));f.x+=dx/d*pull;f.z+=dz/d*pull;}
       const swallowR=p.radius*mouth*(this.mobileAssist?1.6:1)+.4;
@@ -237,7 +238,7 @@ export class Game {
       const edible=this.canEat(c),dangerous=this.isDangerous(c);if(dangerous&&d<c.radius+p.radius+13)this.danger=true;
       if(this.abilityTime>0&&magnet&&edible&&d<p.radius+(this.specialized('magnet-vortex')?31:19)){a=Math.atan2(dz,dx);cs=this.specialized('magnet-vortex')?30:22;}
       c.x+=Math.cos(a)*cs*dt;c.z+=Math.sin(a)*cs*dt;
-      if(Math.abs(c.x)>177||Math.abs(c.z)>177){c.angle+=Math.PI;c.x=clamp(c.x,-176,176);c.z=clamp(c.z,-176,176);}
+      // No world edge: far creatures are recycled relative to the player below.
       if(edible&&d<p.radius*mouth+c.radius*.35){this.creatures.splice(i,1);this.species.add(c.kind);this.stats.prey++;if(c.rare){this.rareCaught++;this.emit('rare',{x:c.x,z:c.z});}this.gain(Math.max(2,c.mass*.18)*(!c.boss&&this.specialized('mouth-feast')?1.25:1)*(c.rare?1.6:1),c.x,c.z,c.kind);this.harvest(c);this.emit('prey',{boss:c.boss});
         if(c.boss){this.finishBoss();break;}
         if(this.status!=='playing')break;

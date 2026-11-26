@@ -22,8 +22,9 @@ export function decodeRun(text){
   try{
     if(typeof text!=='string'||text.length>700000)return null;const envelope=JSON.parse(text);if(envelope.kind!=='symphony-run'||![2,3,4].includes(envelope.version)||typeof envelope.payload!=='string'||hashSeed(envelope.payload)!==envelope.checksum)return null;
     const m=JSON.parse(envelope.payload);if(!safeNumbers(m)||!isMode(m.mode)||!BIOMES.some(b=>b.id===m.biome)||!SAVABLE_STATUS.has(m.status))return null;
-    if(!m.player||m.player.mass<8||Math.abs(m.player.x)>190||Math.abs(m.player.z)>190||m.health<1||m.health>10||m.maxHealth<m.health||m.maxHealth>10||m.stage<0||m.stage>4||m.chapter<0||m.chapter>2||m.time<0||m.time>360000||m.uid<0)return null;
-    for(const [key,max]of [['food',500],['creatures',100],['structures',80],['hazards',100],['waves',150]])if(!Array.isArray(m[key])||m[key].length>max||m[key].some(o=>!o||typeof o.x!=='number'||typeof o.z!=='number'||Math.abs(o.x)>500||Math.abs(o.z)>500))return null;
+    // The sea has no fixed edge: only guard against non-finite runaway values.
+    if(!m.player||m.player.mass<8||Math.abs(m.player.x)>1e7||Math.abs(m.player.z)>1e7||m.health<1||m.health>10||m.maxHealth<m.health||m.maxHealth>10||m.stage<0||m.stage>4||m.chapter<0||m.chapter>2||m.time<0||m.time>360000||m.uid<0)return null;
+    for(const [key,max]of [['food',500],['creatures',100],['structures',80],['hazards',100],['waves',150]])if(!Array.isArray(m[key])||m[key].length>max||m[key].some(o=>!o||typeof o.x!=='number'||typeof o.z!=='number'||Math.abs(o.x)>1e8||Math.abs(o.z)>1e8))return null;
     if(m.structures.some(s=>!STRUCTURE_TYPES[s.type])||m.waves.some(w=>!['ring','bolt'].includes(w.type))||!Array.isArray(m.traits)||new Set(m.traits).size!==m.traits.length||m.traits.some(id=>!TRAITS.some(t=>t.id===id)))return null;
     if(!Array.isArray(m.choices)||m.choices.some(c=>!EVOLUTIONS.some(t=>t.id===c.id))||m.status==='evolution'&&m.choices.length===0)return null;
     if(m.hordeUpgrades!==undefined&&(!Array.isArray(m.hordeUpgrades)||m.hordeUpgrades.length>10))return null;
@@ -38,7 +39,7 @@ export function decodeRun(text){
     for(const key of ['x','z','mass','radius','vx','vz'])if(typeof m.player[key]!=='number')return null;
     if(m.player.radius<=0||m.player.radius>40||m.player.mass>1e8||Object.keys(game.stats).some(k=>typeof m.stats[k]!=='number'))return null;
     const questIds=['combo','food','prey','dash','survive'];if(!questIds.includes(m.challenge.id)||['progress','target','baseline'].some(k=>typeof m.challenge[k]!=='number')||m.challenge.target<=0||m.challengeOrder.some(q=>!questIds.includes(q.id)))return null;
-    if(m.campaignHistory.length>3||m.campaignHistory.some(h=>!BIOMES.some(b=>b.id===h.biome))||m.food.some(f=>typeof f.value!=='number')||m.creatures.some(c=>!Number.isInteger(c.kind)||c.kind<0||c.kind>4||typeof c.mass!=='number'||c.mass<=0||typeof c.radius!=='number'||c.radius<=0||c.boss&&!BIOMES.some(b=>b.id===c.variant)))return null;
+    if(m.campaignHistory.length>3||m.campaignHistory.some(h=>!BIOMES.some(b=>b.id===h.biome))||m.food.some(f=>typeof f.value!=='number')||m.creatures.some(c=>!Number.isInteger(c.kind)||c.kind<0||c.kind>6||typeof c.mass!=='number'||c.mass<=0||typeof c.radius!=='number'||c.radius<=0||c.boss&&!BIOMES.some(b=>b.id===c.variant)))return null;
     for(const key of ['species','seenSynergies','collectedStructures'])if(!Array.isArray(m[key]))return null;
     if(m.lineage!==undefined&&m.lineage!==''&&!LINEAGE_IDS.includes(m.lineage))return null;
     if(m.lineageNodes!==undefined&&(!Array.isArray(m.lineageNodes)||m.lineageNodes.length>12||new Set(m.lineageNodes).size!==m.lineageNodes.length||m.lineageNodes.some(id=>!PATH_EVOLUTION_IDS.includes(id))))return null;

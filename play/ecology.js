@@ -3,7 +3,9 @@ export const SPECIES=[
   {id:1,name:'尖喙猎手',icon:'➶',tip:'蓄力时侧移，避开直线突袭。',detail:'体型占优时锁定方向，短暂蓄力后高速突进。吞噬小猎手可缩短冲刺冷却。'},
   {id:2,name:'脉冲水母',icon:'◎',tip:'等脉冲散去，或用电流麻痹。',detail:'环形光晕预告脉冲。释放期间不能直接吞噬，麻痹可中断保护。捕食后缩短技能冷却。'},
   {id:3,name:'晶壳细胞',icon:'⬡',tip:'绕后捕食，或用冲刺、电流破甲。',detail:'正面晶甲阻挡吞噬，背部柔软。体型充分占优的巨口也能破甲。捕食可积累护膜修复。'},
-  {id:4,name:'海域霸主',icon:'♛',tip:'避开攻击，趁破绽接近。',detail:'各海域有独立霸主与攻击方式。达到本海域目标质量，在护壳暴露或麻痹期间吞噬；远征需要依次征服三海。'}
+  {id:4,name:'海域霸主',icon:'♛',tip:'避开攻击，趁破绽接近。',detail:'各海域有独立霸主与攻击方式。达到本海域目标质量，在护壳暴露或麻痹期间吞噬；远征需要依次征服三海。'},
+  {id:5,name:'礁隙游鱼',icon:'◇',tip:'沿礁石快速穿梭，预判它的转向。',detail:'在礁隙间高速折返，比普通孢子更敏捷。捕食后短暂缩短冲刺冷却。'},
+  {id:6,name:'荧光群游',icon:'✧',tip:'成群环绕，吞下后可延长连击。',detail:'成群游动的微光生物，转向时会留下可读的轨迹。捕食后连击持续时间增加。'}
 ];
 export const SYNERGIES=[
   {id:'storm',name:'电磁风暴',icon:'ϟ',traits:['magnet','electric'],desc:'电流范围 +30%，麻痹会向附近生物连锁传播。'},
@@ -41,6 +43,8 @@ export function creatureMotion(game,c,dt){
     const phase=(c.age+((c.phase||0)%4))%8,old=c.state;c.state=phase<5?'drift':phase<6.4?'warning':'pulse';speed*=.45;
     if(c.state==='warning'&&old!=='warning'&&d<p.radius+c.radius+12&&game.noticeCd<=0){game.emit('jellyWarning');game.noticeCd=3;}
   }else if(c.kind===3){speed*=bigger?.85:.35;facing=c.heading??c.angle;if(d<22+c.radius+p.radius){const target=Math.atan2(dz,dx),diff=Math.atan2(Math.sin(target-facing),Math.cos(target-facing));facing+=Math.max(-dt*.9,Math.min(dt*.9,diff));}angle=facing+(bigger?0:Math.PI);}
+  else if(c.kind===5){speed*=bigger?.72:1.24;c.weave=(c.weave||0)+dt*2.4;angle+=Math.sin(c.weave+c.phase)*.7;if(d<26+c.radius+p.radius){angle=Math.atan2(dz,dx)+(bigger?Math.PI:0);speed*=bigger?1.15:1.35;}}
+  else if(c.kind===6){speed*=bigger?.88:1.06;c.school=(c.school||0)+dt*1.1;angle+=Math.sin(c.school+c.phase)*.38;if(d<19+c.radius+p.radius){angle=Math.atan2(dz,dx)+(bigger?Math.PI:0);speed*=1.2;}}
   else if(d<20+c.radius+p.radius){angle=Math.atan2(dz,dx)+(bigger?0:Math.PI);speed*=bigger?1.55:1.2;}
   if(c.stun>0){speed*=.08;if(c.kind===1){c.state='rest';c.attackClock=2.4;}}
   c.heading=facing??angle;return{angle,speed};

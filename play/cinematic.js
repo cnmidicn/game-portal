@@ -135,8 +135,8 @@ export class CinematicPass{
         // Physical water absorption: red is eaten first, blue survives deepest.
         float absorb=(1.-exp(-dist*.00155))*underwater;
         float water=smoothstep(22.,520.,dist)*underwater;
-        c.r*=mix(1.,.50,absorb);c.g*=mix(1.,.83,absorb);c.b*=mix(1.,1.04,absorb);
-        vec3 inScatter=mix(vec3(.005,.033,.043),vec3(.016,.070,.100),smoothstep(80.,900.,dist));
+        c.r*=mix(1.,.46,absorb);c.g*=mix(1.,.77,absorb);c.b*=mix(1.,1.05,absorb);
+        vec3 inScatter=mix(vec3(.004,.026,.040),vec3(.012,.060,.098),smoothstep(80.,900.,dist));
         c+=inScatter*water*.9;
         if(waterLayers>.5){float haze=sin(p.x*23.+time*.11)*sin(p.y*17.-time*.07)+.6*sin((p.x+p.y)*11.+time*.05);c+=waterTint*water*(.0016*waterLayers)*(1.+.35*haze);}
         if(dof>.01){float coc=clamp(abs(dist-focus)/(focus*1.7),0.,1.)*dof;if(coc>.01){float r=coc*.0048;vec3 blur=sane(texture2D(image,p).rgb);blur+=sane(texture2D(image,clamp(p+vec2(r,0.),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p-vec2(r,0.),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p+vec2(0.,r),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p-vec2(0.,r),vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p+vec2(r,r)*.7,vec2(0.),vec2(1.))).rgb);blur+=sane(texture2D(image,clamp(p-vec2(r,r)*.7,vec2(0.),vec2(1.))).rgb);c=mix(c,blur/7.,coc*.68);}}

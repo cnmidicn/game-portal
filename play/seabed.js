@@ -100,21 +100,45 @@ export function makeSeabedTiles(size = 1100, segments = 160) {
   group.name = 'seabed-lod';
   const tileSize = size / 2;
   const levels = [segments, Math.max(48, Math.round(segments * 0.62)), Math.max(28, Math.round(segments * 0.34))];
+  group.userData = { tileSize, levels, cx: 0, cz: 0 };
   for (let tz = 0; tz < 2; tz++) {
     for (let tx = 0; tx < 2; tx++) {
       const cx = (tx - 0.5) * tileSize, cz = (tz - 0.5) * tileSize;
       const lod = new THREE.LOD();
       lod.position.set(cx, 0, cz);
+      lod.userData = { tx, tz };
       levels.forEach((seg, i) => {
         const mesh = new THREE.Mesh(makeSeabedGeometry(tileSize, seg, cx, cz));
         mesh.receiveShadow = true;
         mesh.userData.seabedLevel = i;
+        mesh.userData.seabedSegment = seg;
         lod.addLevel(mesh, i === 0 ? 0 : i === 1 ? 260 : 620);
       });
       group.add(lod);
     }
   }
   return group;
+}
+
+// Recentre the four seabed tiles around a moving player. Heights are sampled in
+// absolute world space, so rebuilt tiles share exactly the same relief and
+// texture coordinates as the ground they replace: no seams, no distant edge.
+export function updateSeabedTiles(group, cx, cz) {
+  const data = group?.userData;
+  if (!data?.tileSize) return false;
+  if (data.cx === cx && data.cz === cz) return false;
+  data.cx = cx; data.cz = cz;
+  for (const lod of group.children) {
+    const x = cx + (lod.userData.tx - 0.5) * data.tileSize;
+    const z = cz + (lod.userData.tz - 0.5) * data.tileSize;
+    lod.position.set(x, 0, z);
+    for (const level of lod.levels) {
+      const mesh = level.object;
+      mesh.geometry.dispose();
+      mesh.geometry = makeSeabedGeometry(data.tileSize, mesh.userData.seabedSegment, x, z);
+    }
+  }
+  return true;
 }
 
 function makeBlankTexture(rgb) {

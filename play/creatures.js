@@ -126,17 +126,14 @@ export function hasCreature(name){return cache.get(name)?.userData?.ready===true
 // 1 hunter, 2 pulsing drifter, 3 armoured, 4 apex. Every entry is a real
 // photographed/scanned model from ASSET-CREDITS.md — no procedural stand-ins.
 const PERIOD_FAUNA={
-  0:['cc0/real-sardina_pilchardus','cc0/real-gadus_morhua','cc0/real-myctophum_punctatum','cc0/real-raja_clavata','cc0/real-galeocerdo_cuvier'],
-  1:['cc0/real-chaetodon_auriga','cc0/real-latimeria_chalumnae','cc0/real-chauliodus_sloani','cc0/real-ostracion_cubicum','cc0/real-pterois_volitans'],
-  2:['cc0/real-zebrasoma_flavescens','cc0/real-pagrus_major','cc0/real-macropinna_microstoma','cc0/real-hippocampus_kuda','cc0/real-thunnus_albacares'],
-  3:['cc0/real-clupea_harengus','cc0/real-sebastes_norvegicus','cc0/real-anoplogaster_cornuta','cc0/real-diodon_holocanthus','cc0/real-carcharodon_carcharias'],
-  4:['cc0/real-sardina_pilchardus','cc0/real-scomber_scombrus','cc0/real-himantolophus_groenlandicus','cc0/real-mola_mola','cc0/real-prionace_glauca'],
-  5:['cc0/real-katsuwonus_pelamis','cc0/real-salmo_salar','cc0/real-myctophum_punctatum','cc0/real-mobula_birostris','cc0/real-xiphias_gladius']
+  0:['cc0/real-sardina_pilchardus','cc0/real-gadus_morhua','cc0/jellyfish-real','cc0/real-raja_clavata','cc0/real-galeocerdo_cuvier','cc0/real-myctophum_punctatum','cc0/real-clupea_harengus'],
+  1:['cc0/real-chaetodon_auriga','cc0/real-latimeria_chalumnae','cc0/jellyfish-real','cc0/real-ostracion_cubicum','cc0/real-pterois_volitans','cc0/real-lutjanus_kasmira','cc0/real-chauliodus_sloani'],
+  2:['cc0/real-zebrasoma_flavescens','cc0/real-pagrus_major','cc0/jellyfish-real','cc0/real-hippocampus_kuda','cc0/real-thunnus_albacares','cc0/real-paracanthurus_hepatus','cc0/real-synchiropus_splendidus'],
+  3:['cc0/real-clupea_harengus','cc0/real-sebastes_norvegicus','cc0/jellyfish-real','cc0/real-diodon_holocanthus','cc0/real-carcharodon_carcharias','cc0/real-anoplogaster_cornuta','cc0/real-makaira_nigricans'],
+  4:['cc0/real-sardina_pilchardus','cc0/real-scomber_scombrus','cc0/jellyfish-real','cc0/real-mola_mola','cc0/real-prionace_glauca','cc0/real-coryphaena_hippurus','cc0/real-istiophorus_platypterus'],
+  5:['cc0/real-katsuwonus_pelamis','cc0/real-salmo_salar','cc0/jellyfish-real','cc0/real-mobula_birostris','cc0/real-xiphias_gladius','cc0/real-myctophum_punctatum','cc0/real-zanclus_cornutus']
 };
 export function faunaModelFor(kind,periodIndex=0){
-  // Pulsing drifters are jellyfish; hand them their own photographed-style GLB
-  // instead of borrowing a period fish.
-  if(kind===2)return 'cc0/jellyfish-real';
   const row=PERIOD_FAUNA[Math.max(0,Math.min(5,periodIndex|0))];
-  return row[Math.max(0,Math.min(4,kind|0))];
+  return row[Math.max(0,Math.min(row.length-1,kind|0))]||row[0];
 }

@@ -36,7 +36,7 @@ export function tickWorld(g,dt){
   }
   g.hazards=g.hazards.filter(h=>h.life===undefined||h.life>0);
   for(const w of g.waves){w.life-=dt;if(w.type==='ring')w.radius+=w.speed*dt;else{w.x+=w.vx*dt;w.z+=w.vz*dt;}const d=Math.hypot(g.player.x-w.x,g.player.z-w.z),hit=w.type==='ring'?Math.abs(d-w.radius)<g.player.radius*.42+1.2:d<g.player.radius*.55+1;if(hit&&g.dashTime<=0)g.damage({x:w.x,z:w.z,radius:2,hazard:true});if(g.status!=='playing')return;}
-  g.waves=g.waves.filter(w=>w.life>0&&Math.abs(w.x)<210&&Math.abs(w.z)<210);
+  g.waves=g.waves.filter(w=>w.life>0&&Math.hypot(w.x-g.player.x,w.z-g.player.z)<260);
   for(let i=g.structures.length-1;i>=0;i--){const s=g.structures[i];if(s.orbit!==undefined){const a=s.orbit+g.time*.055;s.x=Math.cos(a)*85;s.z=Math.sin(a)*85;}const d=Math.hypot(s.x-g.player.x,s.z-g.player.z);if(s.type==='storm'){const phase=(g.time+s.phase)%8;s.state=phase<4.5?'idle':phase<6?'warning':'pulse';if(s.state==='pulse'&&!canAbsorbStructure(g,s)&&d<s.radius+g.player.radius*.4&&g.dashTime<=0)g.damage({...s,hazard:true});if(g.status!=='playing')return;}if(d>g.player.radius+s.radius*.45||!canAbsorbStructure(g,s))continue;
     g.structures.splice(i,1);g.stats.structures++;
     if(s.type==='echo'){g.echoes++;g.health=Math.min(g.maxHealth,g.health+1);g.emit('echo',{count:g.echoes,x:s.x,z:s.z});}
