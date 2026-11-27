@@ -13,7 +13,12 @@ const MIGRATED_BOOLS=['hordePulse','mobileAssist','assistAim'];
 export function encodeRun(game){
   if(game.status==='home'||terminal.has(game.status))return null;
   const model={};for(const [key,value]of Object.entries(game)){if(['externalRandom','random','rng','events','effects','biome'].includes(key))continue;model[key]=value instanceof Set?[...value]:value;}
-  model.biome=game.biome.id;model.rngState=game.rng?.state??null;model.status=['evolution','interlude','victory'].includes(game.status)?game.status:'paused';
+  // Responsive audit 2026-11-27: preserve every non-terminal resumable status.
+  // Previously briefing/hordeUpgrade were coerced to 'paused', so refreshing during an
+  // expedition briefing or a horde wave lost the briefing / upgrade choice (restore()
+  // already handles these statuses but never saw them).
+  model.biome=game.biome.id;model.rngState=game.rng?.state??null;
+  model.status=SAVABLE_STATUS.has(game.status)?game.status:'paused';
   model.creatures=game.creatures.map(c=>{const{graze,...rest}=c;return{...rest,grazeId:graze?.id??null};});
   const payload=JSON.stringify(model);return JSON.stringify({kind:'symphony-run',version:4,savedAt:Date.now(),checksum:hashSeed(payload),payload});
 }

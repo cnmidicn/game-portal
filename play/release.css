@@ -68,3 +68,11 @@
 @media(max-width:480px){
   .music-debug{max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis;font-size:9px;white-space:nowrap;bottom:calc(64px + env(safe-area-inset-bottom))}
 }
+
+/* Responsive audit 2026-11-27: touch layout on tablets (521-1000px) and landscape
+   phones overlapped .mission / .challenge-panel with the joystick. These optional
+   side panels are already hidden at <=520px; extend that to all touch widths so
+   tablets and landscape phones get the same clean layout. Desktop non-touch unchanged. */
+.touch-mode .playing .mission,
+.touch-mode .playing .challenge-panel,
+.touch-mode .playing .synergy-panel{display:none}

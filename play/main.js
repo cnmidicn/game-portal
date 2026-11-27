@@ -327,7 +327,10 @@ try{
   applyTouchMode();
   const urlQuality=urlParams.get('quality');if(['auto','high','medium','low'].includes(urlQuality)){if(urlQuality==='auto'){archive.qualityMode='auto';archive.quality=autoQuality();}else{archive.qualityMode='manual';archive.quality=urlQuality;}ocean.setQuality(archive.quality);}
   const urlView=urlParams.get('view');if(['follow','orbit','first'].includes(urlView)){ocean.setView(urlView);if($('view-btn'))$('view-btn').textContent=({follow:'◎',orbit:'◐',first:'◉'})[urlView];}
-  const urlPeriod=Number(urlParams.get('period'));if(urlPeriod>=0&&urlPeriod<=5){ocean.periodOverride=urlPeriod;ocean.applyPeriod(urlPeriod);}
+  // Responsive audit 2026-11-27: Number(null) is 0, which used to force periodOverride=0
+  // on every URL without ?period, pinning the scene era even after restoring a late-game save.
+  const periodParam=urlParams.get('period');const urlPeriod=periodParam===null?NaN:Number(periodParam);
+  if(urlPeriod>=0&&urlPeriod<=5){ocean.periodOverride=urlPeriod;ocean.applyPeriod(urlPeriod);}
   game.reset(selectedBiome(),{mode:archive.mode,lifeLevel:archive.lifeLevel||0});$('loading').classList.add('hidden');
   // Offline biomass accrues since the last claim (max 8h). Clock rollback is flagged, never rewarded.
   try{
@@ -399,6 +402,8 @@ addEventListener('keydown',e=>{
 addEventListener('resize',()=>applyTouchMode());
 addEventListener('blur',()=>{releaseInput();if(game.status==='playing')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.status==='playing')pause();});addEventListener('pagehide',checkpoint);
 const joystick=$('joystick');function moveStick(e){const b=joystick.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2),d=Math.hypot(dx,dy),scale=d>39?39/d:1;stick.x=dx*scale/39;stick.z=dy*scale/39;$('joystick-knob').style.transform=`translate(${dx*scale}px,${dy*scale}px)`;}
-joystick.addEventListener('pointerdown',e=>{if(game.status!=='playing')return;stickId=e.pointerId;joystick.setPointerCapture(e.pointerId);moveStick(e);});joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickId)moveStick(e);});for(const e of ['pointerup','pointercancel'])joystick.addEventListener(e,()=>{stickId=null;stick.x=stick.z=0;$('joystick-knob').style.transform='';});
+joystick.addEventListener('pointerdown',e=>{if(game.status!=='playing')return;stickId=e.pointerId;joystick.setPointerCapture(e.pointerId);moveStick(e);});joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickId)moveStick(e);});// Responsive audit 2026-11-27: only the finger that owns the stick may release it;
+// otherwise tapping another HUD control with a second finger zeroes the stick mid-drag.
+for(const e of ['pointerup','pointercancel'])joystick.addEventListener(e,ev=>{if(ev.pointerId!==stickId)return;stickId=null;stick.x=stick.z=0;$('joystick-knob').style.transform='';});
 refreshHome();requestAnimationFrame(frame);
 window.symphonySnapshot=()=>({status:game.status,mode:game.mode,chapter:game.chapter,mass:Math.round(game.player.mass),health:game.health,time:Math.round(game.time),traits:[...game.traits],echoes:game.echoes,structures:game.stats.structures,audio:music.ctx?.state||'not-started'});

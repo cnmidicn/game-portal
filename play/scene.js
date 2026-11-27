@@ -272,7 +272,9 @@ export class Ocean {
     if(kind===3||type==='boss'){const armor=new THREE.Group(),mat=new THREE.MeshBasicMaterial({color:type==='boss'?0xe8c398:0x9fcfc1,transparent:true,opacity:.45});for(let i=0;i<(type==='boss'?10:6);i++){const a=i/(type==='boss'?10:6)*Math.PI*2,m=new THREE.Mesh(this.spikeGeo,mat);m.position.set(Math.cos(a)*.95,.1,Math.sin(a)*.95);m.rotation.z=-Math.cos(a)*1.2;m.rotation.x=Math.sin(a)*1.2;m.scale.setScalar(.55);armor.add(m);}g.add(armor);}
     let faunaSlot=null;
     if(!hero){faunaSlot=new THREE.Group();faunaSlot.position.y=.05;g.add(faunaSlot);g.userData.fauna=faunaSlot;
-      const modelName=type==='boss'?(variant==='tide'?'cc0/real-carcharodon_carcharias':variant==='crystal'?'cc0/real-himantolophus_groenlandicus':'cc0/real-mosasaur'):faunaModelFor(kind,this.currentPeriod);
+      // Responsive audit 2026-11-27: lagoon boss used a non-existent cc0/real-mosasaur.glb
+      // (404 -> silent procedural fallback). The real mosasaur GLB lives at the root.
+      const modelName=type==='boss'?(variant==='tide'?'cc0/real-carcharodon_carcharias':variant==='crystal'?'cc0/real-himantolophus_groenlandicus':'mosasaur'):faunaModelFor(kind,this.currentPeriod);
       loadCreature(modelName).then(model=>{
         if(!model||!g.parent||!faunaSlot)return;
         const clone=model.clone(true);clone.rotation.y=-Math.PI/2;clone.scale.setScalar(type==='boss'?1.75:1.35);
@@ -280,7 +282,10 @@ export class Ocean {
           if(!o.isMesh||!o.material||o.userData.cornealGleam)return;
           const tinted=m=>{const c=m.clone();if(c.color)c.color.lerp(tint,.26);return c;};
           o.material=Array.isArray(o.material)?o.material.map(tinted):tinted(o.material);
-          o.userData.sharedAsset=false;
+          // Responsive audit 2026-11-27: keep sharedAsset=true so disposeCell does NOT
+          // free the cached GLB geometry (clone(true) shares BufferGeometry). Mark the
+          // cloned material separately so it can still be disposed without leaking.
+          o.userData.tintedMaterial=true;
         });
         faunaSlot.add(clone);shell.visible=false;core.visible=false;organelles.visible=false;glow.visible=false;
       });
@@ -693,5 +698,15 @@ export class Ocean {
       this.renderer.render(this.scene,this.camera);this.renderer.toneMapping=prev;
     }
   }
-  disposeCell(g){const mats=new Set(),geos=new Set(),shared=new Set([this.sphere,this.ico,this.torus,this.spikeGeo,this.shieldGeometry]);g.traverse(o=>{if(o.userData.sharedAsset)return;if(o.isMesh&&o.material&&!Object.values(this.materials).includes(o.material))mats.add(o.material);if(o.geometry&&!shared.has(o.geometry))geos.add(o.geometry);});for(const m of mats)m.dispose();for(const geo of geos)geo.dispose();}
+  disposeCell(g){
+    const mats=new Set(),geos=new Set(),shared=new Set([this.sphere,this.ico,this.torus,this.spikeGeo,this.shieldGeometry]);
+    g.traverse(o=>{
+      // Shared cached GLB geometry must never be disposed (cache reuses it). Cloned
+      // vertex-colour materials are owned by this cell and can be disposed safely.
+      const sharedAsset=o.userData.sharedAsset===true;
+      if(o.isMesh&&o.material&&!Object.values(this.materials).includes(o.material)&&(!sharedAsset||o.userData.tintedMaterial))mats.add(o.material);
+      if(o.geometry&&!shared.has(o.geometry)&&!sharedAsset)geos.add(o.geometry);
+    });
+    for(const m of mats)m.dispose();for(const geo of geos)geo.dispose();
+  }
 }

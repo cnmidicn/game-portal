@@ -102,22 +102,19 @@ function trilobite(){
 
 function reef(){
   const g=new THREE.Group(),anim=[];
-  loadCreature('dunkleosteus').then(model=>{
-    if(!model||!g.parent)return;
+  // Responsive audit 2026-11-27: loadCreature resolves(null) on failure, never rejects,
+  // so the old .catch() fallback was dead code. Fall back on a null model instead.
+  const addDunkleosteus=(source)=>{
+    if(!g.parent)return;
     for(let i=0;i<2;i++){
-      const a=i*Math.PI+.7,r=20+i*11,fish=model.clone(true);
+      const a=i*Math.PI+.7,r=20+i*11;
+      const fish=source===null?createDunkleosteus():source.clone(true);
       fish.position.set(Math.cos(a)*r,2.4+i*.9,Math.sin(a)*r);
-      fish.rotation.y=a;fish.scale.setScalar(2.2+i*.25);g.add(fish);
+      fish.rotation.y=a;fish.scale.setScalar(source===null?2.2:2.2+i*.25);g.add(fish);
       anim.push({mesh:fish,type:'orbit',phase:i*2.1,baseY:fish.position.y});
     }
-  }).catch(()=>{
-    for(let i=0;i<2;i++){
-      const fish=createDunkleosteus(),a=i*Math.PI+.7,r=20+i*11;
-      fish.position.set(Math.cos(a)*r,2.4+i*.9,Math.sin(a)*r);
-      fish.rotation.y=a;fish.scale.setScalar(2.2);g.add(fish);
-      anim.push({mesh:fish,type:'orbit',phase:i*2.1,baseY:fish.position.y});
-    }
-  });
+  };
+  loadCreature('dunkleosteus').then(model=>addDunkleosteus(model)).catch(()=>addDunkleosteus(null));
   scatter(g,anim,'cc0/real-latimeria_chalumnae',2,{minR:28,maxR:70,scale:1.7,anim:'drift',seed:43});
   scatter(g,anim,'cc0/real-carcharodon_carcharias',1,{minR:56,maxR:86,scale:2.2,anim:'orbit',seed:47});
   ['cc0/coral-goniastrea','cc0/coral-porites-lobata','cc0/coral-acropora','cc0/coral-madrepora','cc0/coral-pavonia','cc0/coral-manopora']
